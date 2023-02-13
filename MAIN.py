@@ -1,7 +1,9 @@
-
+import sys
+sys.path.append('.')
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 import xml.etree.ElementTree as ET
 
@@ -12,6 +14,54 @@ import xml.etree.ElementTree as ET
 # BSMC Project Mobility Challenge
 #
 # Self-dRiving RC car in 1 month of less.
+
+from multiprocessing import Pipe, Process, Event
+from src.hardware.serialhandler.SerialHandlerProcess        import SerialHandlerProcess
+
+# utility imports
+from src.utils.camerastreamer.CameraStreamerProcess         import CameraStreamerProcess
+from src.utils.remotecontrol.RemoteControlReceiverProcess   import RemoteControlReceiverProcess
+
+
+# =============================== CONFIG =================================================
+enableStream        =  False
+enableCameraSpoof   =  False
+enableRc            =  True
+
+# =============================== INITIALIZING PROCESSES =================================
+allProcesses = list()
+
+# =============================== HARDWARE ===============================================
+if enableStream:
+    camStR, camStS = Pipe(duplex = False)           # camera  ->  streamer
+
+    if enableCameraSpoof:
+        camSpoofer = CameraSpooferProcess([],[camStS],'vid')
+        allProcesses.append(camSpoofer)
+
+    else:
+        camProc = CameraProcess([],[camStS])
+        allProcesses.append(camProc)
+
+    streamProc = CameraStreamerProcess([camStR], [])
+    allProcesses.append(streamProc)
+
+
+
+# =============================== CONTROL =================================================
+if enableRc:
+    rcShR, rcShS   = Pipe(duplex = False)           # rc      ->  serial handler
+
+    # serial handler process
+    shProc = SerialHandlerProcess([rcShR], [])
+    allProcesses.append(shProc)
+
+    rcProc = RemoteControlReceiverProcess([],[rcShS])
+    allProcesses.append(rcProc)
+
+
+## ENABLE RC CONTROL
+
 
 class SensingInput:
     def __init__(self, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
@@ -242,6 +292,8 @@ class Actuation:
         self.steering = steering
         self.velocity = velocity
         self.success = success
+
+
     # def ACTUATEASETEERING(self,STEERING):
     #     #
     #     #
@@ -249,6 +301,16 @@ class Actuation:
     #     #
     #     #
     #     RETURN SUCCESSFUL
+    #def steercar(steering):
+
+
+    def drivecar(self,velocity):
+
+        message = "1:"+str(velocity) + "\n\n"
+        # 1:speed;0x0D 0x0A
+        shProc = SerialHandlerProcess(message, [])
+        allProcesses.append(shProc)
+        return 1
 
     def get_steering(self):
         return self.steering
@@ -279,3 +341,4 @@ while True:
     actuation = Actuation(vehicle_control.get_steering(),vehicle_control.get_velocity())
     print(actuation)
 
+#1:speed;;
