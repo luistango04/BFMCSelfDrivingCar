@@ -97,7 +97,7 @@ def perspectiveWarp(inpImage):
     cv2.circle(frame,c3,5,(0,0,255),-1)
     cv2.circle(frame,c4,5,(0,0,255),-1)
     #cv2.imshow("mytest", frame)
-    # Window to be shown
+    # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
     p1 = [0,0]## TOP LEFT
     p2 = [0,240]  ## BOTTOM LEFT
     p3 = [320,240]  ## BOTTOM RIGHT

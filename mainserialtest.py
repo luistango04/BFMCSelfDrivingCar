@@ -37,8 +37,8 @@ import signal
 from multiprocessing import Pipe, Process, Event 
 
 # hardware imports
-from src.hardware.camera.CameraProcess                      import CameraProcess
-from src.hardware.camera.CameraSpooferProcess               import CameraSpooferProcess
+# from src.hardware.camera.CameraProcess                      import CameraProcess
+# from src.hardware.camera.CameraSpooferProcess               import CameraSpooferProcess
 from src.hardware.serialhandler.SerialHandlerProcess        import SerialHandlerProcess
 
 # utility imports

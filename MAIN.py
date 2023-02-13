@@ -1,4 +1,6 @@
 import sys
+from unittest.mock import Mock
+
 sys.path.append('.')
 import cv2
 import matplotlib.pyplot as plt
@@ -31,36 +33,8 @@ enableRc            =  True
 # =============================== INITIALIZING PROCESSES =================================
 allProcesses = list()
 
-# =============================== HARDWARE ===============================================
-if enableStream:
-    camStR, camStS = Pipe(duplex = False)           # camera  ->  streamer
-
-    if enableCameraSpoof:
-        camSpoofer = CameraSpooferProcess([],[camStS],'vid')
-        allProcesses.append(camSpoofer)
-
-    else:
-        camProc = CameraProcess([],[camStS])
-        allProcesses.append(camProc)
-
-    streamProc = CameraStreamerProcess([camStR], [])
-    allProcesses.append(streamProc)
 
 
-
-# =============================== CONTROL =================================================
-if enableRc:
-    rcShR, rcShS   = Pipe(duplex = False)           # rc      ->  serial handler
-
-    # serial handler process
-    shProc = SerialHandlerProcess([rcShR], [])
-    allProcesses.append(shProc)
-
-    rcProc = RemoteControlReceiverProcess([],[rcShS])
-    allProcesses.append(rcProc)
-
-
-## ENABLE RC CONTROL
 
 
 class SensingInput:
@@ -288,29 +262,61 @@ class VehicleControl:
 
 
 class Actuation:
-    def __init__(self, steering, velocity, success=False):
+    def __init__(self, steering, velocity,accelerations):
         self.steering = steering
         self.velocity = velocity
-        self.success = success
+        self.success = False
+        self.acceleration = accelerations
 
 
-    # def ACTUATEASETEERING(self,STEERING):
-    #     #
-    #     #
-    #     #
-    #     #
-    #     #
-    #     RETURN SUCCESSFUL
-    #def steercar(steering):
 
+    def write_velocity_command(self, ser, lastspeed):
+        """
+        This function writes a velocity command to the given serial port `ser` with the specified `velocity` and `acceleration`.
 
-    def drivecar(self,velocity):
+        Parameters:
+            velocity (float): The target velocity to be set.
+            acceleration (float): The acceleration of the device in M/S.
+            ser (serial.Serial): The serial port to write the command to.
+            lastspeed (float): The last recorded speed of the device.
 
-        message = "1:"+str(velocity) + "\n\n"
-        # 1:speed;0x0D 0x0A
-        shProc = SerialHandlerProcess(message, [])
-        allProcesses.append(shProc)
-        return 1
+        Returns:
+            Tuple: A tuple containing the following values:
+                int:
+                    1 if the speed has reached the target velocity,
+                    0 if the speed is still accelerating or decelerating,
+                    -1 if an error occurred.
+                float: The current speed of the device.
+                float: The time elapsed since the start of the function.
+        """
+
+        # Calculate the time step since the last update
+        step = time.time() - lasttime
+
+        # Initialize the current speed with the last recorded speed
+        carspeed = lastspeed
+
+        # If the current speed is less than the target velocity, increase the speed
+        if (carspeed < self.velocity):
+            carspeed = min(velocity, carspeed + (self.acceleration * step))
+
+        # If the current speed is greater than the target velocity, decrease the speed
+        elif (carspeed > self.velocity):
+            carspeed = max(self.velocity, carspeed - (self.acceleration * step))
+
+        # Encode the command string and write it to the serial port
+        command = f"#1:{carspeed};;\r\n".encode()
+        print("Current Speed:" + str(round(carspeed)) + "  target =" + str(
+            round(self.velocity)) + "  seconds  elapsed :" + str(time.time() - starttime))
+        print("PRINTED: " + str(command) + " To console")
+        ser.write(command)
+
+        # If the current speed is equal to the target velocity, return 1
+        if (carspeed == self.velocity):
+            return 1, carspeed, time.time()
+
+        # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
+        return 0, carspeed, time.time()
 
     def get_steering(self):
         return self.steering
@@ -322,11 +328,19 @@ class Actuation:
 
     def __str__(self):
         return "Steering: {} | Velocity: {} | Success: {}".format(self.steering, self.velocity, self.success)
+## DEFINE GLOBALS
+global lastspeed
+global lasttime
+global VEHICLE
+ser = Mock()
+starttime  = time.time()
+lasttime = starttime
+VEHICLE = VehicleData(0.5, 1.0, 2.0, 30, 20, 15)
 
 while True:
     # READ SENSORS
+    #Beginning time state
     sensing = SensingInput()
-    VEHICLE = VehicleData(0.5, 1.0, 2.0, 30, 20, 15)
     print(VEHICLE)
     # MAKE A SCENE
     perception_scene = PScene(sensing,1240,1080)
@@ -338,7 +352,10 @@ while True:
     vehicle_control = VehicleControl(brain,perception_scene,VEHICLE)
     print(vehicle_control)
     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
-    actuation = Actuation(vehicle_control.get_steering(),vehicle_control.get_velocity())
+    actuation = Actuation(vehicle_control.get_steering(),vehicle_control.get_velocity(),4)
+
+    a,VEHICLE.speed ,c = actuation.write_velocity_command(ser,VEHICLE.get_speed())
     print(actuation)
+    time.sleep(2)
 
 #1:speed;;
