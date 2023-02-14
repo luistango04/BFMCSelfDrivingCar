@@ -145,7 +145,7 @@ def plotHistogram(inpImage):
 
     # Return histogram and x-coordinates of left & right lanes to calculate
     # lane width in pixels
-    return histogram, leftxBase, rightxBase
+    return histogram, leftxBase, rightxBase,midpoint
 #### END - FUNCTION TO PLOT THE HISTOGRAM OF WARPED IMAGE ######################
 ################################################################################
 
@@ -467,7 +467,7 @@ while True:
         # 1- an image to calculate histogram on (thresh)
         hist, leftBase, rightBase = plotHistogram(thresh)
         # # print(rightBase - leftBase)
-        plt.plot(hist)
+        #plt.plot(hist)
 
         #plt.show()
 

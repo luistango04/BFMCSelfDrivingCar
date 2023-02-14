@@ -33,8 +33,42 @@ enableRc            =  True
 # =============================== INITIALIZING PROCESSES =================================
 allProcesses = list()
 
+yresolution = 240#720
+xresolution = 320#420
+import numpy as np
+import cv2
+import pyrealsense2 as rs
+from lanedetection import perspectiveWarp, processImage , plotHistogram,slide_window_search,general_search,measure_lane_curvature,draw_lane_lines,offCenter, addText
+import lanedetection
+def camerainit():
+    import pyrealsense2 as rs
 
 
+    # Configure depth and color streams
+    pipeline = rs.pipeline()
+    config = rs.config()
+
+    # Get device product line for setting a supporting resolution
+    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
+    pipeline_profile = config.resolve(pipeline_wrapper)
+    device = pipeline_profile.get_device()
+    device_product_line = str(device.get_info(rs.camera_info.product_line))
+
+    found_rgb = False
+    for s in device.sensors:
+        if s.get_info(rs.camera_info.name) == 'RGB Camera':
+            found_rgb = True
+            break
+    if not found_rgb:
+        print("The demo requires Depth camera with Color sensor")
+        exit(0)
+
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+    config.enable_stream(rs.stream.color, xresolution, yresolution, rs.format.bgr8, 30)
+
+    # Start streaming
+    pipeline.start(config)
+    return pipeline
 
 
 class SensingInput:
@@ -50,6 +84,16 @@ class SensingInput:
         self.TRAFFICSTATE = 0
         self.CAR_POS = 0
         self.BNO_POS = 0
+        frames = pipeline.wait_for_frames()
+        colorframe = frames.get_color_frame()
+        color_image = np.asanyarray(colorframe.get_data())
+
+        self.colorframe = color_image
+        self.depth_frame  = frames.get_depth_frame()
+
+
+    def get_COLORFRAME(self):
+        return self.colorframe
 
     def get_GPS(self):
         return self.GPS
@@ -144,8 +188,8 @@ class PScene:
     def __init__(self,SensingInput, camera_resolutionx,camera_resolutiony):
         self.camera_resolution = camera_resolutionx
         self.camera_resolution = camera_resolutiony
-    ##    self.lane_detection = np.zeros(camera_resolutionx, camera_resolutiony)
-    ##    self.sign_detection = np.zeros((camera_resolution[0], camera_resolution[1]))
+        self.lane_detection = SensingInput.colorframe
+        self.sign_detection = SensingInput.colorframe
     ##    self.intersection_detection = np.zeros((camera_resolution[0], camera_resolution[1]))
     ##    self.midlane = np.zeros((camera_resolution[0], camera_resolution[1]))
         self.sign_trigger = False
@@ -153,6 +197,66 @@ class PScene:
         self.traffic_light_trigger = False
         self.position = 0
         self.SensingInput = SensingInput
+
+    def lanenode(self):
+        try:
+            birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.lane_detection)
+
+            # Apply image processing by calling the "processImage()" function
+            # Then assign their respective variables (img, hls, grayscale, thresh, blur, canny)
+            # Provide this function with:
+            # 1- an already perspective warped image to process (birdView)
+            img, hls, grayscale, thresh, blur, canny = processImage(birdView)
+            imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
+            imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
+
+            # Plot and display the histogram by calling the "get_histogram()" function
+            # Provide this function with:
+            # 1- an image to calculate histogram on (thresh)
+            hist, leftBase, rightBase,midpoint = plotHistogram(thresh)
+            # # print(rightBase - leftBase)
+            # plt.plot(hist)
+
+            # plt.show()
+
+            #
+
+            # (frame)
+            ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, hist)
+            plt.plot(left_fit)
+            # plt.show()
+            #
+            #
+            draw_info = general_search(thresh, left_fit, right_fit)
+            # plt.show()
+            #
+            #
+
+            curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
+            #
+            #
+            # # Filling the area of detected lanes with green
+            meanPts, result = draw_lane_lines(self.lane_detection, thresh, minverse, draw_info)
+            #
+            #
+            deviation, directionDev = offCenter(meanPts, self.lane_detection)
+            #
+            #
+            # # Adding text to our final image
+            finalImg = addText(result, curveRad, curveDir, deviation, directionDev)
+            #
+            # # Displaying final image
+            #cv2.imshow("Final", finalImg)
+            #      out.write(finalImg)
+            #
+
+            # Wait for the ENTER key to be pressed to stop playback
+            print("FYI MIDPOINT DETECTED WAS:" + str(midpoint))
+
+        except Exception as e:
+            elapsed_time = lasttime - starttime
+            print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
+            print("Error message:", e)
 
 
     def get_camera_resolution(self):
@@ -367,19 +471,24 @@ VEHICLE = VehicleData(0.5, 1.0, 2.0, 30, 20, 15) ## SAMPLE DATA
 
 print(pidcarsetting(0.1,0.03,0.0005,0.3,5,ser)) ## SETS UP THE CAR
 
-
+pipeline = camerainit() ### INITIALIzES CAMREA
 
 while True:
     # READ SENSORS
     #Beginning time state
     sensing = SensingInput()
+
+
     print(VEHICLE)
     # MAKE A SCENE
     perception_scene = PScene(sensing,1240,1080)
-    print(perception_scene)
+    perception_scene.lanenode()
+
+
     # DECIDE WHAT TO DO ON BRAIN
     brain = Brain(perception_scene)
     print(brain.get_brain_values())
+
     #ORCHESTRATE PLANNED MANEUVERS
     vehicle_control = VehicleControl(brain,perception_scene,VEHICLE)
     print(vehicle_control)
@@ -387,6 +496,6 @@ while True:
     actuation = Actuation(vehicle_control.get_steering(),vehicle_control.get_velocity(),4)
     a,VEHICLE.speed ,c = actuation.write_velocity_command(ser,VEHICLE.get_speed())
     print(actuation)
-    time.sleep(2)
+    time.sleep(10)
 
 #1:speed;;

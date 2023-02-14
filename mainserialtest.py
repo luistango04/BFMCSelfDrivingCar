@@ -1,3 +1,17 @@
+import serial
+import time
+
+ser = serial.Serial('COM3', 19200, timeout=0.1)
+count = 0
+
+ser.write(b'#2:10;;\r\n')
+time.sleep(1)
+ser.write(b'#2:-10;;\r\n')
+count += 1
+time.sleep(0.1)
+ser.close()
+
+
 # Copyright (c) 2019, Bosch Engineering Center Cluj and BFMC orginazers
 # All rights reserved.
 
