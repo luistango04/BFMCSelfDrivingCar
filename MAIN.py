@@ -84,6 +84,31 @@ class SensingInput:
     def get_BNO_POS(self):
         return self.BNO_POS
 
+def pidcarsetting(self,kp,ki,kd,k_t,ser):
+        #kp proportional time
+        #ki integral coefficient
+        #kd derivativecoefficient
+        #k_t integraltime
+        #ser serial handler
+
+        # write srial fucntions to Car
+        ser.write(b'#4:1;;\r\n')
+        command = f"#6:{kp};{ki};{kd};{k_t};;\r\n".encode()
+        ser.write(command)
+        ser.readline()
+
+
+
+        #parse read line validate system settings.....
+
+        # hand the system until validation
+
+        # after 10 seconds throw exception and rebooot
+
+        #read serial  back to car
+        return 1
+
+
 class VehicleData:
     def __init__(self,yaw_rate,lateral_acceleration,longitudinal_acceleration,speed,steering_wheel_angle,steering_wheel_velocity):
         self.yaw_rate =yaw_rate
@@ -92,6 +117,7 @@ class VehicleData:
         self.speed = speed
         self.steering_wheel_angle = steering_wheel_angle
         self.steering_wheel_velocity = steering_wheel_velocity
+
 
     def get_yaw_rate(self):
         return self.yaw_rate
@@ -127,6 +153,7 @@ class PScene:
         self.traffic_light_trigger = False
         self.position = 0
         self.SensingInput = SensingInput
+
 
     def get_camera_resolution(self):
         return self.camera_resolution
@@ -265,10 +292,7 @@ class Actuation:
     def __init__(self, steering, velocity,accelerations):
         self.steering = steering
         self.velocity = velocity
-        self.success = False
         self.acceleration = accelerations
-
-
 
     def write_velocity_command(self, ser, lastspeed):
         """
@@ -298,7 +322,7 @@ class Actuation:
 
         # If the current speed is less than the target velocity, increase the speed
         if (carspeed < self.velocity):
-            carspeed = min(velocity, carspeed + (self.acceleration * step))
+            carspeed = min(velocity, carspeed + (self.acceleration * step)) ## DAMPENINING
 
         # If the current speed is greater than the target velocity, decrease the speed
         elif (carspeed > self.velocity):
@@ -327,15 +351,23 @@ class Actuation:
 
 
     def __str__(self):
-        return "Steering: {} | Velocity: {} | Success: {}".format(self.steering, self.velocity, self.success)
+        return " Input Steering: {} | Velocity: {}".format(self.steering, self.velocity,)
 ## DEFINE GLOBALS
-global lastspeed
+global lastspeed ## Using globals for now. Might set to global vehicle data object.
 global lasttime
 global VEHICLE
 ser = Mock()
-starttime  = time.time()
+starttime  = time.time() ## PROOGRAM START
+
 lasttime = starttime
-VEHICLE = VehicleData(0.5, 1.0, 2.0, 30, 20, 15)
+VEHICLE = VehicleData(0.5, 1.0, 2.0, 30, 20, 15) ## SAMPLE DATA
+
+
+
+
+print(pidcarsetting(0.1,0.03,0.0005,0.3,5,ser)) ## SETS UP THE CAR
+
+
 
 while True:
     # READ SENSORS
@@ -353,7 +385,6 @@ while True:
     print(vehicle_control)
     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
     actuation = Actuation(vehicle_control.get_steering(),vehicle_control.get_velocity(),4)
-
     a,VEHICLE.speed ,c = actuation.write_velocity_command(ser,VEHICLE.get_speed())
     print(actuation)
     time.sleep(2)
