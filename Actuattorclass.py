@@ -23,7 +23,7 @@ def write_velocity_command(velocity,acceleration,ser,lastspeed): ## Acceleration
         return 0, carspeed, time.time()
 
 
-
+#ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 ser = Mock()
 starttime  = time.time()
 lasttime = starttime
