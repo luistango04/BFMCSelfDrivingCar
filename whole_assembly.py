@@ -403,9 +403,7 @@ def steering(xcenter_lane, xcenter_image):
     error = xcenter_lane - xcenter_image
     prev_error = 0
 
-    # Define maximum and minimum steering angles
-    max_angle = 20
-    min_angle = -20
+
 
     # PD controller
     # while True:

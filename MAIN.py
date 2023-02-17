@@ -7,6 +7,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
+#create a finite state machine
+class FSM:
+    def __init__(self, states, start_state):
+        self.states = states
+        self.state = start_state
+
+    def run(self, input):
+        (new_state, output) = self.states[self.state](input)
+        self.state = new_state
+        return output
+
+
+
 import xml.etree.ElementTree as ET
 
 ## BSMF
@@ -343,7 +356,7 @@ class VehicleControl:
         self.vehicle_data = vehicle_data
         self.steering = 0
         self.velocity = 0
-
+        self.sterringbound = [-20 ,20] #degrees
     def get_steering(self):
         return self.steering
 
@@ -383,6 +396,36 @@ class VehicleControl:
         parking_trigger = self.brain.parking_trigger
 
         # Execute parking function based on trigger value
+    def lanefollow(self):
+        #stay and correct to center of Lane
+        Kp = 0.1  # Proportional gain
+        Kd = 0.01  # Derivative gain
+
+        # Define initial error and derivative of error
+        error = xcenter_lane - xcenter_image
+        prev_error = 0
+
+        # PD controller
+        # while True:
+        # Update error and derivative of error
+        error = xcenter_lane - xcenter_image
+        error_diff = error - prev_error
+        prev_error = error
+
+        # Calculate steering angle
+        angle = Kp * error + Kd * error_diff
+
+        # Limit the steering angle to the maximum and minimum values
+        angle = max(min_angle, min(max_angle, angle))
+
+        # Apply steering angle to the vehicle
+
+        # speed is lastspeed
+        return angle,VEHICLE.speed
+
+        # return to cruising speed
+
+        # Execute parking function based on trigger value
 
     def __str__(self):
             return f"UNDERCONSTRUCTION"
@@ -398,7 +441,7 @@ class Actuation:
         self.velocity = velocity
         self.acceleration = accelerations
 
-    def write_velocity_command(self, ser, lastspeed):
+    def write_velocity_command(self, ser:
         """
         This function writes a velocity command to the given serial port `ser` with the specified `velocity` and `acceleration`.
 
@@ -406,7 +449,7 @@ class Actuation:
             velocity (float): The target velocity to be set.
             acceleration (float): The acceleration of the device in M/S.
             ser (serial.Serial): The serial port to write the command to.
-            lastspeed (float): The last recorded speed of the device.
+            VEHICLE.speed (float): The last recorded speed of the device.
 
         Returns:
             Tuple: A tuple containing the following values:
@@ -417,12 +460,14 @@ class Actuation:
                 float: The current speed of the device.
                 float: The time elapsed since the start of the function.
         """
-
         # Calculate the time step since the last update
-        step = time.time() - lasttime
 
-        # Initialize the current speed with the last recorded speed
-        carspeed = lastspeed
+
+        # Initialize the current speed with the last recorded speed#
+
+        carspeed = VEHICLE.speed
+
+        step = time.time() - lasttime
 
         # If the current speed is less than the target velocity, increase the speed
         if (carspeed < self.velocity):
@@ -441,10 +486,10 @@ class Actuation:
 
         # If the current speed is equal to the target velocity, return 1
         if (carspeed == self.velocity):
-            return 1, carspeed, time.time()
+            return 1, time.time()
 
         # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
-        return 0, carspeed, time.time()
+        return 0, time.time()
 
     def get_steering(self):
         return self.steering
@@ -457,7 +502,7 @@ class Actuation:
     def __str__(self):
         return " Input Steering: {} | Velocity: {}".format(self.steering, self.velocity,)
 ## DEFINE GLOBALS
-global lastspeed ## Using globals for now. Might set to global vehicle data object.
+global VEHICLE.speed ## Using globals for now. Might set to global vehicle data object.
 global lasttime
 global VEHICLE
 ser = Mock()
@@ -494,7 +539,7 @@ while True:
     print(vehicle_control)
     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
     actuation = Actuation(vehicle_control.get_steering(),vehicle_control.get_velocity(),4)
-    a,VEHICLE.speed ,c = actuation.write_velocity_command(ser,VEHICLE.get_speed())
+    a ,c = actuation.write_velocity_command(ser,VEHICLE.get_speed())
     print(actuation)
     time.sleep(10)
 
