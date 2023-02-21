@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 29
+names: ['-Road narrows on right', '50 mph speed limit', 'Attention Please-', 'Beware of children', 'CYCLE ROUTE AHEAD WARNING', 'Dangerous Left Curve Ahead', 'Dangerous Rright Curve Ahead', 'End of all speed and passing limits', 'Give Way', 'Go Straight or Turn Right', 'Go straight or turn left', 'Keep-Left', 'Keep-Right', 'Left Zig Zag Traffic', 'No Entry', 'No_Over_Taking', 'Overtaking by trucks is prohibited', 'Pedestrian Crossing', 'Round-About', 'Slippery Road Ahead', 'Speed Limit 20 KMPh', 'Speed Limit 30 KMPh', 'Stop_Sign', 'Straight Ahead Only', 'Traffic_signal', 'Truck traffic is prohibited', 'Turn left ahead', 'Turn right ahead', 'Uneven Road']
+
+roboflow:
+  workspace: usmanchaudhry622-gmail-com
+  project: traffic-and-road-signs
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/usmanchaudhry622-gmail-com/traffic-and-road-signs/dataset/1
