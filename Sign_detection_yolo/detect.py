@@ -48,6 +48,8 @@ from utils.torch_utils import select_device, time_sync
 
 
 @torch.no_grad()
+
+
 def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         source=ROOT / 'data/images',  # file/dir/URL/glob, 0 for webcam
         data=ROOT / 'data/coco128.yaml',  # dataset.yaml path

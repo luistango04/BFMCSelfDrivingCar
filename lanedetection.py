@@ -85,6 +85,7 @@ def perspectiveWarp(inpImage):
     print(img_size)
     # Perspective points to be warped
     ############ update this to identify region lane of interest based on lens of camera
+
     c1 = ((int) (.2*xresolution),(int)(.3*yresolution)) ## TOP LEFT
     c2 =   [0,(int) (.7*yresolution)] ## BOTTOM LEFT
     c3 =  [xresolution, (int)(.7*yresolution)]   ## BOTTOM RIGHT
@@ -92,11 +93,7 @@ def perspectiveWarp(inpImage):
     ##
 
     src = np.float32([c1,c2,c3,c4])
-    cv2.circle(frame,c1,5,(0,0,255),-1)
-    cv2.circle(frame,c2,5,(0,0,255),-1)
-    cv2.circle(frame,c3,5,(0,0,255),-1)
-    cv2.circle(frame,c4,5,(0,0,255),-1)
-    #cv2.imshow("mytest", frame)
+
     # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
     p1 = [0,0]## TOP LEFT
     p2 = [0,240]  ## BOTTOM LEFT
@@ -104,9 +101,16 @@ def perspectiveWarp(inpImage):
     p4 = [320,0]  # TOP RIGHT
 
     dst = np.float32([p1,p2,p3,p4])
+
     # Matrix to warp the image for birdseye window
     matrix = cv2.getPerspectiveTransform(src, dst)
     #cv2.imshow("myetest2",matrix)
+    # cv2.circle(frame,c1,5,(0,0,255),-1)
+    # cv2.circle(frame,c2,5,(0,0,255),-1)
+    # cv2.circle(frame,c3,5,(0,0,255),-1)
+    # cv2.circle(frame,c4,5,(0,0,255),-1)
+    # #cv2.imshow("mytest", frame)
+
     # Inverse matrix to unwarp the image for final window
     minv = cv2.getPerspectiveTransform(dst, src)
     birdseye = cv2.warpPerspective(inpImage, matrix, img_size)

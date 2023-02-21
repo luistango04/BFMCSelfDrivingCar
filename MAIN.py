@@ -1,5 +1,6 @@
 import sys
 from unittest.mock import Mock
+from Sign_detection_yolo import detect
 
 sys.path.append('.')
 import cv2
@@ -16,6 +17,7 @@ global maxspeed
 maxspeed = .3
 global minspeed
 minspeed = -.3
+
 
 
 # create a finite state machine
@@ -212,8 +214,8 @@ class PScene:
     def __init__(self, SensingInput, camera_resolutionx, camera_resolutiony):
         self.camera_resolution = camera_resolutionx
         self.camera_resolution = camera_resolutiony
-        self.lane_detection = SensingInput.colorframe
-        self.sign_detection = SensingInput.colorframe
+        SensingInput.colorframe
+        SensingInput.colorframe
         ##    self.intersection_detection = np.zeros((camera_resolution[0], camera_resolution[1]))
         ##    self.midlane = np.zeros((camera_resolution[0], camera_resolution[1]))
         self.sign_trigger = False
@@ -221,6 +223,33 @@ class PScene:
         self.traffic_light_trigger = False
         self.position = 0
         self.SensingInput = SensingInput
+
+    def runobjectdetection(self):
+        ## NEED THIS TO RUN
+        ## do something to make   SensingInput.colorframe look liek the region of interest .
+        # c1 = ((int)(.2 * xresolution), (int)(.3 * yresolution))  ## TOP LEFT
+        # c2 = [0, (int)(.7 * yresolution)]  ## BOTTOM LEFT
+        # c3 = [xresolution, (int)(.7 * yresolution)]  ## BOTTOM RIGHT
+        # c4 = [(int)(.8 * xresolution), (int)(.3 * yresolution)]  # TOP RIGHT
+        # ##
+        #
+        # src = np.float32([c1, c2, c3, c4])
+        #
+        # # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
+        # p1 = [0, 0]  ## TOP LEFT
+        # p2 = [0, .7* yresolution]  ## BOTTOM LEFT
+        # p3 = [.8*resoltuion, .7*yresolution]  ## BOTTOM RIGHT
+        # p4 = [.8* xresolution, 0]  # TOP RIGHT
+        #
+        # dst = np.float32([p1, p2, p3, p4])
+        #
+        # # Matrix to warp the image for birdseye window
+        # matrix = cv2.getPerspectiveTransform(src, dst)
+        #RUN HISTORGRAM LANEDTECTION ON MATRX
+        run(matrix,resolutionx,resolutiony)
+        ## add additional param for resolution x, resolution y
+        ## in case you need it for the tensor function param
+
 
     def lanenode(self):
         try:
