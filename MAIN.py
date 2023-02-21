@@ -7,7 +7,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-#create a finite state machine
+#### CAR GLOBAL MAX
+global maxsteering
+maxsteering = 23
+global minsteering
+minsteering = -23
+global maxspeed
+maxspeed = .3
+global minspeed
+minspeed = -.3
+
+
+# create a finite state machine
 class FSM:
     def __init__(self, states, start_state):
         self.states = states
@@ -17,7 +28,6 @@ class FSM:
         (new_state, output) = self.states[self.state](input)
         self.state = new_state
         return output
-
 
 
 import xml.etree.ElementTree as ET
@@ -31,31 +41,32 @@ import xml.etree.ElementTree as ET
 # Self-dRiving RC car in 1 month of less.
 
 from multiprocessing import Pipe, Process, Event
-from src.hardware.serialhandler.SerialHandlerProcess        import SerialHandlerProcess
+from src.hardware.serialhandler.SerialHandlerProcess import SerialHandlerProcess
 
 # utility imports
-from src.utils.camerastreamer.CameraStreamerProcess         import CameraStreamerProcess
-from src.utils.remotecontrol.RemoteControlReceiverProcess   import RemoteControlReceiverProcess
-
+from src.utils.camerastreamer.CameraStreamerProcess import CameraStreamerProcess
+from src.utils.remotecontrol.RemoteControlReceiverProcess import RemoteControlReceiverProcess
 
 # =============================== CONFIG =================================================
-enableStream        =  False
-enableCameraSpoof   =  False
-enableRc            =  True
+enableStream = False
+enableCameraSpoof = False
+enableRc = True
 
 # =============================== INITIALIZING PROCESSES =================================
 allProcesses = list()
 
-yresolution = 240#720
-xresolution = 320#420
+yresolution = 240  # 720
+xresolution = 320  # 420
 import numpy as np
 import cv2
 import pyrealsense2 as rs
-from lanedetection import perspectiveWarp, processImage , plotHistogram,slide_window_search,general_search,measure_lane_curvature,draw_lane_lines,offCenter, addText
+from lanedetection import perspectiveWarp, processImage, plotHistogram, slide_window_search, general_search, \
+    measure_lane_curvature, draw_lane_lines, offCenter, addText
 import lanedetection
+
+
 def camerainit():
     import pyrealsense2 as rs
-
 
     # Configure depth and color streams
     pipeline = rs.pipeline()
@@ -86,24 +97,24 @@ def camerainit():
 
 class SensingInput:
     def __init__(self, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
-        self.GPS = GPS
-        self.IMU = IMU
-        self.INTELLISENSECAMERA = INTELLISENSECAMERA
-        self.V2VLISTENER = V2VLISTENER
-        self.BNOLISTENER = BNOLISTENER
-        self.ROADIMAGE = 0
-        self.SIGNREGION = 0
-        self.INTERSECTIONREGION = 0
-        self.TRAFFICSTATE = 0
-        self.CAR_POS = 0
-        self.BNO_POS = 0
-        frames = pipeline.wait_for_frames()
-        colorframe = frames.get_color_frame()
-        color_image = np.asanyarray(colorframe.get_data())
+        self.speed = 0
+        self.colorframe = []
 
-        self.colorframe = color_image
-        self.depth_frame  = frames.get_depth_frame()
+    def import_image(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
+        try:
+            frames = pipeline.wait_for_frames()
+            colorframe = frames.get_color_frame()
+            color_image = np.asanyarray(colorframe.get_data())
+            self.colorframe = color_image
+            return 1
 
+        except:
+            print("CAMERA NOT FOUND")
+            return 0
+
+    def senseall(self):  # runs through all methods to refresh the senses. ## returns bit to sendto debug layer
+        results = self.import_image()
+        return results
 
     def get_COLORFRAME(self):
         return self.colorframe
@@ -141,40 +152,39 @@ class SensingInput:
     def get_BNO_POS(self):
         return self.BNO_POS
 
-def pidcarsetting(self,kp,ki,kd,k_t,ser):
-        #kp proportional time
-        #ki integral coefficient
-        #kd derivativecoefficient
-        #k_t integraltime
-        #ser serial handler
 
-        # write srial fucntions to Car
-        ser.write(b'#4:1;;\r\n')
-        command = f"#6:{kp};{ki};{kd};{k_t};;\r\n".encode()
-        ser.write(command)
-        ser.readline()
+def pidcarsetting(self, kp, ki, kd, k_t, ser):
+    # kp proportional time
+    # ki integral coefficient
+    # kd derivativecoefficient
+    # k_t integraltime
+    # ser serial handler
 
+    # write srial fucntions to Car
+    ser.write(b'#4:1;;\r\n')
+    command = f"#6:{kp};{ki};{kd};{k_t};;\r\n".encode()
+    ser.write(command)
+    ser.readline()
 
+    # parse read line validate system settings.....
 
-        #parse read line validate system settings.....
+    # hand the system until validation
 
-        # hand the system until validation
+    # after 10 seconds throw exception and rebooot
 
-        # after 10 seconds throw exception and rebooot
-
-        #read serial  back to car
-        return 1
+    # read serial  back to car
+    return 1
 
 
 class VehicleData:
-    def __init__(self,yaw_rate,lateral_acceleration,longitudinal_acceleration,speed,steering_wheel_angle,steering_wheel_velocity):
-        self.yaw_rate =yaw_rate
+    def __init__(self, yaw_rate, lateral_acceleration, longitudinal_acceleration, speed, steering_wheel_angle,
+                 steering_wheel_velocity):
+        self.yaw_rate = yaw_rate
         self.lateral_acceleration = lateral_acceleration
         self.longitudinal_acceleration = longitudinal_acceleration
         self.speed = speed
         self.steering_wheel_angle = steering_wheel_angle
         self.steering_wheel_velocity = steering_wheel_velocity
-
 
     def get_yaw_rate(self):
         return self.yaw_rate
@@ -197,14 +207,15 @@ class VehicleData:
     def __str__(self):
         return f"yaw_rate: {self.yaw_rate}, lateral_acceleration: {self.lateral_acceleration}, longitudinal_acceleration: {self.longitudinal_acceleration}, speed: {self.speed}, steering_wheel_angle: {self.steering_wheel_angle}, steering_wheel_velocity: {self.steering_wheel_velocity}"
 
+
 class PScene:
-    def __init__(self,SensingInput, camera_resolutionx,camera_resolutiony):
+    def __init__(self, SensingInput, camera_resolutionx, camera_resolutiony):
         self.camera_resolution = camera_resolutionx
         self.camera_resolution = camera_resolutiony
         self.lane_detection = SensingInput.colorframe
         self.sign_detection = SensingInput.colorframe
-    ##    self.intersection_detection = np.zeros((camera_resolution[0], camera_resolution[1]))
-    ##    self.midlane = np.zeros((camera_resolution[0], camera_resolution[1]))
+        ##    self.intersection_detection = np.zeros((camera_resolution[0], camera_resolution[1]))
+        ##    self.midlane = np.zeros((camera_resolution[0], camera_resolution[1]))
         self.sign_trigger = False
         self.intersection_trigger = False
         self.traffic_light_trigger = False
@@ -226,7 +237,7 @@ class PScene:
             # Plot and display the histogram by calling the "get_histogram()" function
             # Provide this function with:
             # 1- an image to calculate histogram on (thresh)
-            hist, leftBase, rightBase,midpoint = plotHistogram(thresh)
+            hist, leftBase, rightBase, midpoint = plotHistogram(thresh)
             # # print(rightBase - leftBase)
             # plt.plot(hist)
 
@@ -259,7 +270,7 @@ class PScene:
             finalImg = addText(result, curveRad, curveDir, deviation, directionDev)
             #
             # # Displaying final image
-            #cv2.imshow("Final", finalImg)
+            # cv2.imshow("Final", finalImg)
             #      out.write(finalImg)
             #
 
@@ -270,7 +281,6 @@ class PScene:
             elapsed_time = lasttime - starttime
             print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
             print("Error message:", e)
-
 
     def get_camera_resolution(self):
         return self.camera_resolution
@@ -302,11 +312,10 @@ class PScene:
     def get_vehicle_data(self):
         return self.vehicle_data
 
-
     def __str__(self):
-      return 'midlane: {}\nsign_trigger: {}\nintersection_trigger: {}\ntraffic_light_trigger: {}\nposition: {}\n'.format(
-                0,
-                self.sign_trigger, self.intersection_trigger, self.traffic_light_trigger, self.position     )
+        return 'midlane: {}\nsign_trigger: {}\nintersection_trigger: {}\ntraffic_light_trigger: {}\nposition: {}\n'.format(
+            0,
+            self.sign_trigger, self.intersection_trigger, self.traffic_light_trigger, self.position)
 
 
 class Brain:
@@ -336,17 +345,16 @@ class Brain:
         #             self.acceleration_trigger = int(child.attrib["value"])
         #         elif child.tag == "intersection_navigation":
         #             self.intersection_navigation_trigger = int(child.attrib["value"])
+
     def get_brain_values(self):
-                    return [self.break_trigger,
-            self.road_search_trigger,
-            self.switch_lane_trigger,
-            self.parking_trigger,
-            self.lane_following_trigger,
-            self.acceleration_trigger,
-            self.intersection_navigation_trigger,
-            ]
-
-
+        return [self.break_trigger,
+                self.road_search_trigger,
+                self.switch_lane_trigger,
+                self.parking_trigger,
+                self.lane_following_trigger,
+                self.acceleration_trigger,
+                self.intersection_navigation_trigger,
+                ]
 
 
 class VehicleControl:
@@ -356,10 +364,10 @@ class VehicleControl:
         self.vehicle_data = vehicle_data
         self.steering = 0
         self.velocity = 0
-        self.sterringbound = [-20 ,20] #degrees
+        self.sterringbound = [-20, 20]  # degrees
+
     def get_steering(self):
         return self.steering
-
 
     def get_velocity(self):
         return self.velocity
@@ -396,8 +404,9 @@ class VehicleControl:
         parking_trigger = self.brain.parking_trigger
 
         # Execute parking function based on trigger value
-    def lanefollow(self):
-        #stay and correct to center of Lane
+
+    def lanefollow(self, xcenter_lane=None, xcenter_image=None):
+        # stay and correct to center of Lane
         Kp = 0.1  # Proportional gain
         Kd = 0.01  # Derivative gain
 
@@ -421,27 +430,27 @@ class VehicleControl:
         # Apply steering angle to the vehicle
 
         # speed is lastspeed
-        return angle,VEHICLE.speed
+        return angle, VEHICLE.speed
 
         # return to cruising speed
 
         # Execute parking function based on trigger value
 
     def __str__(self):
-            return f"UNDERCONSTRUCTION"
-                # f"break_signal: {self.break_signal}" \
-                # f"\nroad_search_signal: {self.road_search_signal}\nswitch_lane_signal: {self.switch_lane_signal}" \
-                # f"\nparking_signal: {self.parking_signal}\nlane_following_signal: {self.lane_following_signal}" \
-                # f"\nacceleration_signal: {self.acceleration_signal}\nintersection_navigation_signal: {self.intersection_navigation_signal}"
+        return f"UNDERCONSTRUCTION"
+        # f"break_signal: {self.break_signal}" \
+        # f"\nroad_search_signal: {self.road_search_signal}\nswitch_lane_signal: {self.switch_lane_signal}" \
+        # f"\nparking_signal: {self.parking_signal}\nlane_following_signal: {self.lane_following_signal}" \
+        # f"\nacceleration_signal: {self.acceleration_signal}\nintersection_navigation_signal: {self.intersection_navigation_signal}"
 
 
 class Actuation:
-    def __init__(self, steering, velocity,accelerations):
+    def __init__(self, steering, velorate, accelerations):
         self.steering = steering
-        self.velocity = velocity
-        self.acceleration = accelerations
+        self.velocity = velorate * maxspeed
+        self.acceleration = .05
 
-    def write_velocity_command(self, ser:
+    def write_velocity_command(self, ser, velocity):
         """
         This function writes a velocity command to the given serial port `ser` with the specified `velocity` and `acceleration`.
 
@@ -462,16 +471,15 @@ class Actuation:
         """
         # Calculate the time step since the last update
 
-
         # Initialize the current speed with the last recorded speed#
 
-        carspeed = VEHICLE.speed
+        carspeed = velocity
 
         step = time.time() - lasttime
 
         # If the current speed is less than the target velocity, increase the speed
         if (carspeed < self.velocity):
-            carspeed = min(velocity, carspeed + (self.acceleration * step)) ## DAMPENINING
+            carspeed = min(velocity, carspeed + (self.acceleration * step))  ## DAMPENINING
 
         # If the current speed is greater than the target velocity, decrease the speed
         elif (carspeed > self.velocity):
@@ -497,50 +505,47 @@ class Actuation:
     def get_velocity(self):
         return self.velocity
 
-
-
     def __str__(self):
-        return " Input Steering: {} | Velocity: {}".format(self.steering, self.velocity,)
+        return " Input Steering: {} | Velocity: {}".format(self.steering, self.velocity, )
+
+
 ## DEFINE GLOBALS
-global VEHICLE.speed ## Using globals for now. Might set to global vehicle data object.
+# global VEHICLE.speed ## Using globals for now. Might set to global vehicle data object.
 global lasttime
 global VEHICLE
 ser = Mock()
-starttime  = time.time() ## PROOGRAM START
+
+starttime = time.time()  ## PROOGRAM START
 
 lasttime = starttime
-VEHICLE = VehicleData(0.5, 1.0, 2.0, 30, 20, 15) ## SAMPLE DATA
+VEHICLE = VehicleData(0.5, 1.0, 2.0, .5, 20, 15)  ## SAMPLE DATA
 
+sensing = SensingInput()
+print(pidcarsetting(0.1, 0.03, 0.0005, 0.3, 5, ser))  ## SETS UP THE CAR
 
-
-
-print(pidcarsetting(0.1,0.03,0.0005,0.3,5,ser)) ## SETS UP THE CAR
-
-pipeline = camerainit() ### INITIALIzES CAMREA
+# pipeline = camerainit() ### INITIALIzES CAMREA
 
 while True:
     # READ SENSORS
-    #Beginning time state
-    sensing = SensingInput()
-
+    # Beginning time state
+    sensing.senseall()
 
     print(VEHICLE)
     # MAKE A SCENE
-    perception_scene = PScene(sensing,1240,1080)
+    perception_scene = PScene(sensing, 1240, 1080)
     perception_scene.lanenode()
-
 
     # DECIDE WHAT TO DO ON BRAIN
     brain = Brain(perception_scene)
     print(brain.get_brain_values())
 
-    #ORCHESTRATE PLANNED MANEUVERS
-    vehicle_control = VehicleControl(brain,perception_scene,VEHICLE)
+    # ORCHESTRATE PLANNED MANEUVERS
+    vehicle_control = VehicleControl(brain, perception_scene, VEHICLE)
     print(vehicle_control)
     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
-    actuation = Actuation(vehicle_control.get_steering(),vehicle_control.get_velocity(),4)
-    a ,c = actuation.write_velocity_command(ser,VEHICLE.get_speed())
+    actuation = Actuation(vehicle_control.get_steering(), vehicle_control.get_velocity(), 4)
+    a, c = actuation.write_velocity_command(ser, VEHICLE.get_speed())
     print(actuation)
-    time.sleep(10)
+    time.sleep(2)
 
-#1:speed;;
+# 1:speed;;
