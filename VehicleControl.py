@@ -46,9 +46,9 @@ class VehicleControl:
         #break_trigger = self.brain.break_trigger
 
         # Execute break function based on trigger value
-    def accel(self):
+    def accel(self,rate = .75):
         # Get break trigger value from brain object
-        self.velorate =  .75 ## % of max velocity ## DEFAULT VELOCITY
+        self.velorate =  rate ## % of max velocity ## DEFAULT VELOCITY
         self.acceleration = 5 ## % increase per step time
         ## FLUSH SERIAL SEND 0 TO CASH
 

@@ -1,5 +1,5 @@
 import sys
-
+import serial
 from  Actuation import Actuation
 from  VehicleControl import VehicleControl
 from unittest.mock import Mock
@@ -10,7 +10,10 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
+#ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
 
+ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+ser.flush()
 
 
 
@@ -356,7 +359,6 @@ class Brain:
 # global VEHICLE.speed ## Using globals for now. Might set to global vehicle data object.
 global lasttime
 global VEHICLE
-ser = Mock()
 
 starttime = time.time()  ## PROOGRAM START
 
@@ -402,6 +404,29 @@ while True:
     if (elapsed_time > 10 and elapsed_time < 15 and boolaccel == False):
         print("ACCELEARTION")
         vehicle.accel()
+        boolaccel = True
+
+
+    if (elapsed_time > 15 and elapsed_time < 20):
+        print("ACCELEARTION")
+        vehicle.break_execution()
+
+        boolaccel = True
+
+
+    if (elapsed_time > 15 and elapsed_time < 20 ):
+        vehicle.break_execution()
+        boolaccel = False
+
+    if (elapsed_time > 20 and elapsed_time < 50):
+        print("ACCELEARTION")
+        vehicle.accel(1)
+        boolaccel = True
+
+
+    if (elapsed_time > 50):
+        print("BREAK")
+        vehicle.break_execution()
         boolaccel = True
 
     actuation = Actuation(vehicle,carspeed) ## Get carsoeed from sensor
