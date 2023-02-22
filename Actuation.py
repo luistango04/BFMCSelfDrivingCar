@@ -12,15 +12,19 @@ global minspeed
 minspeed = -.3
 
 
+
+
 class Actuation:
-    def __init__(self,VehicleControl):
-        self.VehicleControl = VehicleControl
-        self.steering = self.VehicleControl.get_steering()
+    def __init__(self,VehicleControl,carspeed):
 
-        self.velocity = self.VehicleControl.get_velorate() * maxspeed
+        self.steering = VehicleControl.get_steering()
+        self.carspeed = carspeed
+        self.velocity = VehicleControl.get_velorate() * maxspeed
 
-        print("VELO:" + str(self.velocity))
-        self.acceleration = self.VehicleControl.acc2()
+        #print("VELO:" + str(self.velocity))
+        self.acceleration = VehicleControl.acc2()
+
+        #print("Accelo:" + str(self.acceleration))
     def write_velocity_command(self, ser,lasttime,starttime):
         """
         This function writes a velocity command to the given serial port `ser` with the specified `velocity` and `acceleration`.
@@ -44,37 +48,38 @@ class Actuation:
 
         # Initialize the current speed with the last recorded speed#
 
-        carspeed = self.velocity
+        carspeed = self.carspeed
 
         step = time.time() - lasttime
-        print(step)
-        print ('##')
-        print(carspeed)
-        print('##')
-        print(self.acceleration)
+        # print(step)
+        # print ('##')
+        # print(carspeed)
+        # print('##')
+        # print(self.acceleration  * step)
 
 
         # If the current speed is less than the target velocity, increase the speed
         if (carspeed < self.velocity):
-            carspeed = min(velocity, carspeed + (self.acceleration * step))  ## DAMPENINING
+            carspeed = min(self.velocity, max(.15,carspeed + (self.acceleration * step)))  ## DAMPENINING  #15 withot PID .1PID
 
         # If the current speed is greater than the target velocity, decrease the speed
         elif (carspeed > self.velocity):
-            carspeed = max(self.velocity, carspeed - (self.acceleration * step))
+            carspeed = max(self.velocity, carspeed - 4*(self.acceleration * step))
+        elif (round(carspeed,6) > round(self.velocity,6)):
+            carspeed = self.velocity
 
         # Encode the command string and write it to the serial port
         command = f"#1:{carspeed};;\r\n".encode()
-        print("Current Speed:" + str(round(carspeed)) + "  target =" + str(
-            round(self.velocity)) + "  seconds  elapsed :" + str(time.time() - starttime))
+        print("Current Speed:" + str(round(carspeed,8)) + "  target =" + str(self.velocity) + "  seconds  elapsed :" + str(time.time() - starttime))
         print("PRINTED: " + str(command) + " To console")
         ser.write(command)
 
         # If the current speed is equal to the target velocity, return 1
         if (carspeed == self.velocity):
-            return 1, time.time()
+            return 1, time.time(),carspeed
 
         # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
-        return 0, time.time()
+        return 0, time.time(),carspeed
 
     def get_steering(self):
         return self.steering

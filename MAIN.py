@@ -1,5 +1,7 @@
 import sys
+
 from  Actuation import Actuation
+from  VehicleControl import VehicleControl
 from unittest.mock import Mock
 #from Sign_detection_yolo import detect
 import time
@@ -168,17 +170,6 @@ def pidcarsetting(self, kp, ki, kd, k_t, ser):
 
     # read serial  back to car
     return 1
-
-
-
-    def get_speed(self):
-        return self.speed
-
-    def get_steering_wheel_angle(self):
-        return self.steering_wheel_angle
-
-    def get_steering_wheel_velocity(self):
-        return self.steering_wheel_velocity
 
     def __str__(self):
         return f"yaw_rate: {self.yaw_rate}, lateral_acceleration: {self.lateral_acceleration}, longitudinal_acceleration: {self.longitudinal_acceleration}, speed: {self.speed}, steering_wheel_angle: {self.steering_wheel_angle}, steering_wheel_velocity: {self.steering_wheel_velocity}"
@@ -361,123 +352,6 @@ class Brain:
                 ]
 
 
-class VehicleControl:
-
-    def __init__(self, brain, pscene, vehicle_data):
-        self.brain = brain
-        self.pscene = pscene
-        self.vehicle_data = vehicle_data
-        self.steering = 0
-        self.velorate = 0
-
-        self.accelrate = 0
-
-    def __call__(self, steering, velorrate, accelrate):
-
-        self.steering = steering
-        self.velorate = velorrate
-
-        self.accelrate = accelrate
-
-        print("Instance is called via special method")
-        return self
-
-
-    def get_steering(self):
-        return self.steering
-
-    def acc2(self):
-        return self.accelrate
-    def get_velorate(self):
-        return self.velorate
-
-    def break_execution(self):
-        # Get break trigger value from brain object
-        self.breaktrigger = True
-        ## FLUSH SERIAL SEND 0 TO CASH
-        ser.flush()
-
-
-        self.velorate = 0
-        self.acceleration = 10
-        self.steering = 0
-
-        #break_trigger = self.brain.break_trigger
-
-        # Execute break function based on trigger value
-    def accel(self):
-        # Get break trigger value from brain object
-        self.velorate =  .5 ## % of max velocity ## DEFAULT VELOCITY
-        self.acceleration = .005 ## % increase per step time
-        ## FLUSH SERIAL SEND 0 TO CASH
-
-
-
-
-
-    def road_search_execution(self):
-        # Get road search trigger value from brain object
-        road_search_trigger = self.brain.road_search_trigger
-
-        # Execute road search function based on trigger value
-        if road_search_trigger:
-            # Road search function implementation here
-            pass
-
-    def switch_lane_execution(self):
-        # Get switch lane trigger value from brain object
-        switch_lane_trigger = self.brain.switch_lane_trigger
-
-        # Execute switch lane function based on trigger value
-        if switch_lane_trigger:
-            # Switch lane function implementation here
-            pass
-
-    def parking_execution(self):
-        # Get parking trigger value from brain object
-        parking_trigger = self.brain.parking_trigger
-
-        # Execute parking function based on trigger value
-
-    def lanefollow(self, xcenter_lane=None, xcenter_image=None):
-        # stay and correct to center of Lane
-        Kp = 0.1  # Proportional gain
-        Kd = 0.01  # Derivative gain
-
-        # Define initial error and derivative of error
-        error = xcenter_lane - xcenter_image
-        prev_error = 0
-
-        # PD controller
-        # while True:
-        # Update error and derivative of error
-        error = xcenter_lane - xcenter_image
-        error_diff = error - prev_error
-        prev_error = error
-
-        # Calculate steering angle
-        angle = Kp * error + Kd * error_diff
-
-        # Limit the steering angle to the maximum and minimum values
-        angle = max(min_angle, min(max_angle, angle))
-
-        # Apply steering angle to the vehicle
-
-        # speed is lastspeed
-        return angle, VEHICLE.speed
-
-        # return to cruising speed
-
-        # Execute parking function based on trigger value
-
-    def __str__(self):
-        return f"UNDERCONSTRUCTION"
-        # f"break_signal: {self.break_signal}" \
-        # f"\nroad_search_signal: {self.road_search_signal}\nswitch_lane_signal: {self.switch_lane_signal}" \
-        # f"\nparking_signal: {self.parking_signal}\nlane_following_signal: {self.lane_following_signal}" \
-        # f"\nacceleration_signal: {self.acceleration_signal}\nintersection_navigation_signal: {self.intersection_navigation_signal}"
-
-
 ## DEFINE GLOBALS
 # global VEHICLE.speed ## Using globals for now. Might set to global vehicle data object.
 global lasttime
@@ -489,13 +363,14 @@ starttime = time.time()  ## PROOGRAM START
 lasttime = starttime
 
 sensing = SensingInput()
-print(pidcarsetting(0.1, 0.03, 0.0005, 0.3, 5, ser))  ## SETS UP THE CAR
-
+#pidcarsetting(0.1, 0.03, 0.0005, 0.3, 5, ser))  ## SETS UP THE CAR
+global carspeed
+carspeed = 0
 # pipeline = camerainit() ### INITIALIzES CAMREA
-vehicle = VehicleControl(0, 0, 0)
+vehicle = VehicleControl(0, 0, 0,ser)
 
-vehicle = vehicle(10, 1, 0.0005)  ## call function can be used for tesitng
-print(type(vehicle))
+vehicle = vehicle(10, 1, 0.01,ser)  ## call function can be used for tesitng
+
 while True:
     # READ SENSORS
     # Beginning time state
@@ -512,16 +387,15 @@ while True:
 
     # ORCHESTRATE PLANNED MANEUVERS
 #    vehicle_control = VehicleControl(brain, perception_scene, VEHICLE)
-    print(vehicle)
+    #print(vehicle)
     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
 
 
-
+    #print(vehicle)
     elapsed_time = lasttime - starttime
-    print(elapsed_time)
+
     boolbreak = False
     if (elapsed_time > 2 and elapsed_time < 10 and boolbreak == False):
-        print("BREAK")
         vehicle.break_execution()
         boolaccel = False
 
@@ -530,14 +404,17 @@ while True:
         vehicle.accel()
         boolaccel = True
 
-    actuation = Actuation(vehicle)
-    actuation.write_velocity_command(ser,lasttime,starttime)
-    print(actuation)
+    actuation = Actuation(vehicle,carspeed) ## Get carsoeed from sensor
+    #print(actuation.carspeed)
+    #print(actuation.velocity)
+    a,b,carspeed = actuation.write_velocity_command(ser,lasttime,starttime)
+    #print(carspeed)
+
 
 
     lasttime = time.time()
 
-    time.sleep(2)
+    time.sleep(1)
 
 
 # 1:speed;;
