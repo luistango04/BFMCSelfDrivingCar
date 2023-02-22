@@ -1,22 +1,14 @@
 import sys
+from  Actuation import Actuation
 from unittest.mock import Mock
-from Sign_detection_yolo import detect
-
+#from Sign_detection_yolo import detect
+import time
 sys.path.append('.')
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 
-#### CAR GLOBAL MAX
-global maxsteering
-maxsteering = 23
-global minsteering
-minsteering = -23
-global maxspeed
-maxspeed = .3
-global minspeed
-minspeed = -.3
+
 
 
 
@@ -178,24 +170,6 @@ def pidcarsetting(self, kp, ki, kd, k_t, ser):
     return 1
 
 
-class VehicleData:
-    def __init__(self, yaw_rate, lateral_acceleration, longitudinal_acceleration, speed, steering_wheel_angle,
-                 steering_wheel_velocity):
-        self.yaw_rate = yaw_rate
-        self.lateral_acceleration = lateral_acceleration
-        self.longitudinal_acceleration = longitudinal_acceleration
-        self.speed = speed
-        self.steering_wheel_angle = steering_wheel_angle
-        self.steering_wheel_velocity = steering_wheel_velocity
-
-    def get_yaw_rate(self):
-        return self.yaw_rate
-
-    def get_lateral_acceleration(self):
-        return self.lateral_acceleration
-
-    def get_longitudinal_acceleration(self):
-        return self.longitudinal_acceleration
 
     def get_speed(self):
         return self.speed
@@ -307,6 +281,7 @@ class PScene:
             print("FYI MIDPOINT DETECTED WAS:" + str(midpoint))
 
         except Exception as e:
+
             elapsed_time = lasttime - starttime
             print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
             print("Error message:", e)
@@ -387,28 +362,58 @@ class Brain:
 
 
 class VehicleControl:
+
     def __init__(self, brain, pscene, vehicle_data):
         self.brain = brain
         self.pscene = pscene
         self.vehicle_data = vehicle_data
         self.steering = 0
-        self.velocity = 0
-        self.sterringbound = [-20, 20]  # degrees
+        self.velorate = 0
+
+        self.accelrate = 0
+
+    def __call__(self, steering, velorrate, accelrate):
+
+        self.steering = steering
+        self.velorate = velorrate
+
+        self.accelrate = accelrate
+
+        print("Instance is called via special method")
+        return self
+
 
     def get_steering(self):
         return self.steering
 
-    def get_velocity(self):
-        return self.velocity
+    def acc2(self):
+        return self.accelrate
+    def get_velorate(self):
+        return self.velorate
 
     def break_execution(self):
         # Get break trigger value from brain object
-        break_trigger = self.brain.break_trigger
+        self.breaktrigger = True
+        ## FLUSH SERIAL SEND 0 TO CASH
+        ser.flush()
+
+
+        self.velorate = 0
+        self.acceleration = 10
+        self.steering = 0
+
+        #break_trigger = self.brain.break_trigger
 
         # Execute break function based on trigger value
-        if break_trigger:
-            # Break function implementation here
-            pass
+    def accel(self):
+        # Get break trigger value from brain object
+        self.velorate =  .5 ## % of max velocity ## DEFAULT VELOCITY
+        self.acceleration = .005 ## % increase per step time
+        ## FLUSH SERIAL SEND 0 TO CASH
+
+
+
+
 
     def road_search_execution(self):
         # Get road search trigger value from brain object
@@ -473,71 +478,6 @@ class VehicleControl:
         # f"\nacceleration_signal: {self.acceleration_signal}\nintersection_navigation_signal: {self.intersection_navigation_signal}"
 
 
-class Actuation:
-    def __init__(self, steering, velorate, accelerations):
-        self.steering = steering
-        self.velocity = velorate * maxspeed
-        self.acceleration = .05
-
-    def write_velocity_command(self, ser, velocity):
-        """
-        This function writes a velocity command to the given serial port `ser` with the specified `velocity` and `acceleration`.
-
-        Parameters:
-            velocity (float): The target velocity to be set.
-            acceleration (float): The acceleration of the device in M/S.
-            ser (serial.Serial): The serial port to write the command to.
-            VEHICLE.speed (float): The last recorded speed of the device.
-
-        Returns:
-            Tuple: A tuple containing the following values:
-                int:
-                    1 if the speed has reached the target velocity,
-                    0 if the speed is still accelerating or decelerating,
-                    -1 if an error occurred.
-                float: The current speed of the device.
-                float: The time elapsed since the start of the function.
-        """
-        # Calculate the time step since the last update
-
-        # Initialize the current speed with the last recorded speed#
-
-        carspeed = velocity
-
-        step = time.time() - lasttime
-
-        # If the current speed is less than the target velocity, increase the speed
-        if (carspeed < self.velocity):
-            carspeed = min(velocity, carspeed + (self.acceleration * step))  ## DAMPENINING
-
-        # If the current speed is greater than the target velocity, decrease the speed
-        elif (carspeed > self.velocity):
-            carspeed = max(self.velocity, carspeed - (self.acceleration * step))
-
-        # Encode the command string and write it to the serial port
-        command = f"#1:{carspeed};;\r\n".encode()
-        print("Current Speed:" + str(round(carspeed)) + "  target =" + str(
-            round(self.velocity)) + "  seconds  elapsed :" + str(time.time() - starttime))
-        print("PRINTED: " + str(command) + " To console")
-        ser.write(command)
-
-        # If the current speed is equal to the target velocity, return 1
-        if (carspeed == self.velocity):
-            return 1, time.time()
-
-        # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
-        return 0, time.time()
-
-    def get_steering(self):
-        return self.steering
-
-    def get_velocity(self):
-        return self.velocity
-
-    def __str__(self):
-        return " Input Steering: {} | Velocity: {}".format(self.steering, self.velocity, )
-
-
 ## DEFINE GLOBALS
 # global VEHICLE.speed ## Using globals for now. Might set to global vehicle data object.
 global lasttime
@@ -547,34 +487,57 @@ ser = Mock()
 starttime = time.time()  ## PROOGRAM START
 
 lasttime = starttime
-VEHICLE = VehicleData(0.5, 1.0, 2.0, .5, 20, 15)  ## SAMPLE DATA
 
 sensing = SensingInput()
 print(pidcarsetting(0.1, 0.03, 0.0005, 0.3, 5, ser))  ## SETS UP THE CAR
 
 # pipeline = camerainit() ### INITIALIzES CAMREA
+vehicle = VehicleControl(0, 0, 0)
 
+vehicle = vehicle(10, 1, 0.0005)  ## call function can be used for tesitng
+print(type(vehicle))
 while True:
     # READ SENSORS
     # Beginning time state
-    sensing.senseall()
-
-    print(VEHICLE)
-    # MAKE A SCENE
-    perception_scene = PScene(sensing, 1240, 1080)
-    perception_scene.lanenode()
-
-    # DECIDE WHAT TO DO ON BRAIN
-    brain = Brain(perception_scene)
-    print(brain.get_brain_values())
+    # sensing.senseall()
+    #
+    # print(VEHICLE)
+    # # MAKE A SCENE
+    # perception_scene = PScene(sensing, 1240, 1080)
+    # perception_scene.lanenode()
+    #
+    # # DECIDE WHAT TO DO ON BRAIN
+    # brain = Brain(perception_scene)
+    # print(brain.get_brain_values())
 
     # ORCHESTRATE PLANNED MANEUVERS
-    vehicle_control = VehicleControl(brain, perception_scene, VEHICLE)
-    print(vehicle_control)
+#    vehicle_control = VehicleControl(brain, perception_scene, VEHICLE)
+    print(vehicle)
     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
-    actuation = Actuation(vehicle_control.get_steering(), vehicle_control.get_velocity(), 4)
-    a, c = actuation.write_velocity_command(ser, VEHICLE.get_speed())
+
+
+
+    elapsed_time = lasttime - starttime
+    print(elapsed_time)
+    boolbreak = False
+    if (elapsed_time > 2 and elapsed_time < 10 and boolbreak == False):
+        print("BREAK")
+        vehicle.break_execution()
+        boolaccel = False
+
+    if (elapsed_time > 10 and elapsed_time < 15 and boolaccel == False):
+        print("ACCELEARTION")
+        vehicle.accel()
+        boolaccel = True
+
+    actuation = Actuation(vehicle)
+    actuation.write_velocity_command(ser,lasttime,starttime)
     print(actuation)
+
+
+    lasttime = time.time()
+
     time.sleep(2)
+
 
 # 1:speed;;
