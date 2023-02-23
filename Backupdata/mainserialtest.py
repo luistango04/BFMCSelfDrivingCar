@@ -44,7 +44,7 @@ ser.close()
 # SCRIPT USED FOR WIRING ALL COMPONENTS
 #========================================================================
 import sys
-sys.path.append('.')
+sys.path.append('..')
 
 import time
 import signal
