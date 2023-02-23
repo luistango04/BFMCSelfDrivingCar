@@ -5,6 +5,7 @@ def camerainit():
     # Configure depth and color streams
     pipeline = rs.pipeline()
     config = rs.config()
+    depth_sensor = pipeline.get_active_profile().get_device().first_depth_sensor()
 
     # Get device product line for setting a supporting resolution
     pipeline_wrapper = rs.pipeline_wrapper(pipeline)
@@ -26,7 +27,7 @@ def camerainit():
 
     # Start streaming
     pipeline.start(config)
-    return pipeline
+    return pipeline,depth_sensor
 def pidcarsetting(self, kp, ki, kd, k_t, ser):
     # kp proportional time
     # ki integral coefficient
