@@ -1,3 +1,10 @@
+import pyrealsense2 as rs
+global yresolution
+yresolution = 240  # 720
+global xresolution
+xresolution = 320  # 420
+
+
 
 def camerainit():
     import pyrealsense2 as rs
@@ -5,8 +12,7 @@ def camerainit():
     # Configure depth and color streams
     pipeline = rs.pipeline()
     config = rs.config()
-    depth_sensor = pipeline.get_active_profile().get_device().first_depth_sensor()
-
+    
     # Get device product line for setting a supporting resolution
     pipeline_wrapper = rs.pipeline_wrapper(pipeline)
     pipeline_profile = config.resolve(pipeline_wrapper)
@@ -23,11 +29,11 @@ def camerainit():
         exit(0)
 
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, xresolution, yresolution, rs.format.bgr8, 30)
+    #config.enable_stream(rs.stream.color, xresolution, yresolution, rs.format.bgr8, 30)
 
     # Start streaming
     pipeline.start(config)
-    return pipeline,depth_sensor
+    return pipeline
 def pidcarsetting(self, kp, ki, kd, k_t, ser):
     # kp proportional time
     # ki integral coefficient

@@ -1,16 +1,18 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-global diameterofwheel
+import pyrealsense2 as rs
+global diameterofwheel 
+diameterofwheel = 65
 
 class SensingInput:
     def __init__(self,ser,pipeline, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
         self.speed = 0
         self.colorframe = []
         self.ser = ser
-        self.velocity
-        self.tilt
-        self.pipeline = pipeline
+        self.velo = 0
+        self.tilt = 0
+        self.pipeline = pipeline ##
 
     def import_image(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
         try:
@@ -24,34 +26,43 @@ class SensingInput:
             print("CAMERA NOT FOUND")
             return 0
     def velocity(self):
-        while True:
+           try:
             # Read a line of data from the serial port
             data = self.ser.readline().decode().strip()
+
+            print(data)
+	
             if data:
                 # Parse the data to extract the RPM value
-                if data.startswith("#5:"):
-                    rpm = int(data.split(":")[1].split(";")[0])
-                    self.velocity = rpm * diameterofwheel ## Diameter of wheel
-
-                    return rpm
-
+                if data.startswith("@5:"):
+                    rpm = float(data.split(":")[1].split(";")[0])
+      
+                    self.velo = rpm * diameterofwheel ## Diameter of wheel
+                    print(rpm)
+ 			
+                    return self.velo 
+           except:
+            print("ERROR IN RPM")
+            return 0
     def gettilt(self):
 
-        depth_sensor = pipeline.get_active_profile().get_device().first_depth_sensor()
+        depth_sensor = self.pipeline.get_active_profile().get_device().first_depth_sensor()
 
         # Get the current tilt angle
-        tilt_angle = depth_sensor.get_option(rs.option.camera_angle)
+         ##tilt_angle = depth_sensor.get_option(rs.option.camera_angle)
 
-        print("Tilt angle: ", tilt_angle)
-        self.tilt = tilt_angle
-        return tilt_angle
+        #print("Tilt angle: ", tilt_angle)
+        ##  self.tilt = tilt_angle ## FAILURE
+        return 0 ## FAILURE
 
 
     def senseall(self):  # runs through all methods to refresh the senses. ## returns bit to sendto debug layer
-        tilt = self.gettilt()
-        speed = self.velocity()
+     	
+        self.velocity()
+
         results = self.import_image()
-        return tilt,speed
+
+        return self.tilt,self.velo
 
     def get_COLORFRAME(self):
         return self.colorframe

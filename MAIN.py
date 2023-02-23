@@ -1,8 +1,8 @@
 import sys
 from  Sense import SensingInput
 from  Actuation import Actuation
-import Setup
-from Backupdata.VehicleControl import VehicleControl
+from  Setup import camerainit, pidcarsetting
+from VehicleControl import VehicleControl
 from unittest.mock import Mock
 import serial
 #from Sign_detection_yolo import detect
@@ -11,7 +11,7 @@ sys.path.append('.')
 
 #ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
 
-ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
 ser.flush()
 
 global depthsensor
@@ -29,12 +29,10 @@ enableRc = True
 # =============================== INITIALIZING PROCESSES =================================
 allProcesses = list()
 
-yresolution = 240  # 720
-xresolution = 320  # 420
-
-
 global lasttime
 global VEHICLE
+
+
 
 starttime = time.time()  ## PROOGRAM START
 
@@ -47,16 +45,18 @@ global carspeed
 carspeed = 0
 
 
-
+vehicle = VehicleControl(0,0,0,ser)
 vehicle = vehicle(10, 1, 0.01,ser)  ## call function can be used for tesitng
 
 while True:
     sensing.senseall()
+   
     carspeed = sensing.velocity()
-    # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
+     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
+	
 
 
-    #print(vehicle)
+
     elapsed_time = lasttime - starttime
 
     actuation = Actuation(vehicle,carspeed) ## Get carsoeed from sensor
@@ -69,7 +69,7 @@ while True:
 
     lasttime = time.time()
 
-    time.sleep(3)
+    time.sleep(.5)
 
 
 # 1:speed;;
