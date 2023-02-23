@@ -38,6 +38,7 @@ def pidcarsetting(self, kp, ki, kd, k_t, ser):
     ser.write(b'#4:1;;\r\n')
     command = f"#6:{kp};{ki};{kd};{k_t};;\r\n".encode()
     ser.write(command)
+    ser.write(b'#5:1;;\r\n')
     ser.readline()
 
     # parse read line validate system settings.....
