@@ -1,13 +1,14 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-
+global wheelradius
 
 class SensingInput:
-    def __init__(self, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
+    def __init__(self,ser, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
         self.speed = 0
         self.colorframe = []
-
+        self.ser = ser
+        self.velocity
     def import_image(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
         try:
             frames = pipeline.wait_for_frames()
@@ -19,7 +20,19 @@ class SensingInput:
         except:
             print("CAMERA NOT FOUND")
             return 0
+    def serialistener(self):
+        while True:
+            # Read a line of data from the serial port
+            data = self.ser.readline().decode().strip()
+            if data:
+                # Parse the data to extract the RPM value
+                if data.startswith("#5:"):
+                    rpm = int(data.split(":")[1].split(";")[0])
+                    self.velocity = rpm * 65
 
+                    return rpm
+
+    def gettilt(self):
     def senseall(self):  # runs through all methods to refresh the senses. ## returns bit to sendto debug layer
         results = self.import_image()
         return results

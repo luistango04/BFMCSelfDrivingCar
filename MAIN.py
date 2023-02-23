@@ -73,7 +73,7 @@ starttime = time.time()  ## PROOGRAM START
 
 lasttime = starttime
 
-sensing = SensingInput()
+sensing = SensingInput(ser)
 #pidcarsetting(0.1, 0.03, 0.0005, 0.3, 5, ser))  ## SETS UP THE CAR
 global carspeed
 carspeed = 0
