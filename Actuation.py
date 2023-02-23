@@ -10,6 +10,8 @@ global maxspeed
 maxspeed = .3
 global minspeed
 minspeed = -.3
+global lastangle 
+lastangle = 0
 
 
 
@@ -18,6 +20,7 @@ class Actuation:
     def __init__(self,VehicleControl,carspeed):
 
         self.steering = VehicleControl.get_steering()
+        self.angularacceleration = 10
         self.carspeed = carspeed
         self.velocity = VehicleControl.get_velorate() * maxspeed
 
@@ -81,6 +84,54 @@ class Actuation:
         # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
         return 0, time.time(),carspeed
 
+    def write_angle_command(self, ser, lasttime,starttime):
+        """
+        This function writes a steering command to the given serial port `ser` with the specified `steeringangle` and `angularacceleration`.
+
+        Parameters:
+            steering (float): The target angle to be set. Maximum bounds of angle is -23.0 to 23.0
+            acceleration (float): The angularacceleration of the device in deg/S*S.
+            ser (serial.Serial): The serial port to write the command to.
+            lastangle (float): The last recorded anle of the device.
+
+        Returns:
+            Tuple: A tuple containing the following values:
+                int:
+                    1 if the steeringangle has reached the target angle,
+                    0 if the steeringangle is still increasing or decreasing,
+                    -1 if an error occurred.
+                float: The current angle of the steering.
+                float: The time elapsed since the start of the function.
+        """
+
+        # Calculate the time step since the last update
+        step = time.time() - lasttime
+
+        # Initialize the current angle with the last recorded angle
+        steeringangle = lastangle
+
+        # If the current angle is less than the target steering, increase the angle
+        if (steeringangle < self.steering):
+            steeringangle = min(self.steering, steeringangle + (self.angularacceleration * step)) ## DAMPENINING
+
+        # If the current angle is greater than the target steering angle, decrease the angle
+        elif (steeringangle > self.steering):
+            steeringangle = max(self.steering, steeringangle - (self.angularacceleration * step))
+
+        # Encode the command string and write it to the serial port
+        command = f"#2:{steeringangle};;\r\n".encode()
+        print("Current Angle:" + str(round(steeringangle)) + "  target =" + str(
+            round(self.steering)) + "  seconds  elapsed :" + str(time.time() - starttime))
+        print("PRINTED: " + str(command) + " To console")
+        ser.write(command)
+
+        # If the current angle is equal to the target steering angle, return 1
+        if (steeringangle == self.steering):
+            return 1, time.time(), steeringangle
+
+        # Otherwise, return 0 to indicate that the angle is still increasing or decreasing
+        return 0, time.time(), steeringangle
+    
     def get_steering(self):
         return self.steering
 
