@@ -1,17 +1,12 @@
 import sys
-import serial
 from  Sense import SensingInput
-from Brain import Brain
 from  Actuation import Actuation
 
-from  VehicleControl import VehicleControl
+from Backupdata.VehicleControl import VehicleControl
 from unittest.mock import Mock
 #from Sign_detection_yolo import detect
 import time
 sys.path.append('.')
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
 
 ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
 
@@ -22,8 +17,6 @@ ser.flush()
 
 # create a finite state machine
 
-import xml.etree.ElementTree as ET
-
 ## BSMF
 ##
 # Principal AUTHOR: Luis Carpi
@@ -32,12 +25,7 @@ import xml.etree.ElementTree as ET
 #
 # Self-dRiving RC car in 1 month of less.
 
-from multiprocessing import Pipe, Process, Event
-from src.hardware.serialhandler.SerialHandlerProcess import SerialHandlerProcess
-
 # utility imports
-from src.utils.camerastreamer.CameraStreamerProcess import CameraStreamerProcess
-from src.utils.remotecontrol.RemoteControlReceiverProcess import RemoteControlReceiverProcess
 
 # =============================== CONFIG =================================================
 enableStream = False
@@ -49,12 +37,6 @@ allProcesses = list()
 
 yresolution = 240  # 720
 xresolution = 320  # 420
-import numpy as np
-import cv2
-import pyrealsense2 as rs
-from lanedetection import perspectiveWarp, processImage, plotHistogram, slide_window_search, general_search, \
-    measure_lane_curvature, draw_lane_lines, offCenter, addText
-import lanedetection
 
 
 def camerainit():
