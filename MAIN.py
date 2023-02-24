@@ -9,9 +9,9 @@ import serial
 import time
 sys.path.append('.')
 
-#ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
+ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
 
-ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
+#ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
 ser.flush()
 
 global depthsensor

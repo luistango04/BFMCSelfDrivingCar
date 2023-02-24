@@ -63,3 +63,4 @@ brain = Brain.from_values(True, 30, True, False, "red", (0, 0, 0), "north")
 
 # print the brain object to see the diagnostics
 print(brain)
+

@@ -13,14 +13,8 @@ import numpy as np
 import os
 from scipy import optimize
 from matplotlib import pyplot as plt, cm, colors
-videopath = r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\Sample video\Records\Records\21-09-17-13-00-00.mp4"
-yresolution = 240#720
-xresolution = 320#420
 
-# Defining variables to hold meter-to-pixel conversion
-ym_per_pix = 30 / yresolution# Standard lane width is 3.7 meters divided by lane width in pixels which is NEEDS TUNING
-# calculated to be approximately 720 pixels not to be confused with frame height
-xm_per_pix = 3.7 / xresolution
+
 
 # Get path to the current working directory
 CWD_PATH = os.getcwd()
@@ -70,67 +64,10 @@ def processImage(inpImage):
 ##    cv2.imshow("Blurred", blur)
    #cv2.imshow("Canny Edges", canny)
 
-    return image, hls_result, gray, thresh, blur, canny
+    return inpImage, hls_result, gray, thresh, blur, canny
 #### END - FUNCTION TO PROCESS IMAGE ###########################################
 ################################################################################
 
-
-
-################################################################################
-#### START - FUNCTION TO APPLY PERSPECTIVE WARP ################################
-def perspectiveWarp(inpImage):
-
-    # Get image size
-    img_size = (inpImage.shape[1], inpImage.shape[0])
-    print(img_size)
-    # Perspective points to be warped
-    ############ update this to identify region lane of interest based on lens of camera
-
-    c1 = ((int) (.2*xresolution),(int)(.3*yresolution)) ## TOP LEFT
-    c2 =   [0,(int) (.7*yresolution)] ## BOTTOM LEFT
-    c3 =  [xresolution, (int)(.7*yresolution)]   ## BOTTOM RIGHT
-    c4 =      [(int) (.8*xresolution),(int)(.3*yresolution)] #TOP RIGHT
-    ##
-
-    src = np.float32([c1,c2,c3,c4])
-
-    # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
-    p1 = [0,0]## TOP LEFT
-    p2 = [0,240]  ## BOTTOM LEFT
-    p3 = [320,240]  ## BOTTOM RIGHT
-    p4 = [320,0]  # TOP RIGHT
-
-    dst = np.float32([p1,p2,p3,p4])
-
-    # Matrix to warp the image for birdseye window
-    matrix = cv2.getPerspectiveTransform(src, dst)
-    #cv2.imshow("myetest2",matrix)
-    # cv2.circle(frame,c1,5,(0,0,255),-1)
-    # cv2.circle(frame,c2,5,(0,0,255),-1)
-    # cv2.circle(frame,c3,5,(0,0,255),-1)
-    # cv2.circle(frame,c4,5,(0,0,255),-1)
-    # #cv2.imshow("mytest", frame)
-
-    # Inverse matrix to unwarp the image for final window
-    minv = cv2.getPerspectiveTransform(dst, src)
-    birdseye = cv2.warpPerspective(inpImage, matrix, img_size)
-
-    # Get the birds
-    # eye window dimensions
-    height, width = birdseye.shape[:2]
-
-    # Divide the birdseye view into 2 halves to separate left & right lanes
-    birdseyeLeft  = birdseye[0:height, 0:width // 2]
-    birdseyeRight = birdseye[0:height, width // 2:width]
-
-#     Display birdseye view image
-    #cv2.imshow("Birdseye" , birdseye)
-    #cv2.imshow("Birdseye Left" , birdseyeLeft)
-    #cv2.imshow("Birdseye Right", birdseyeRight)
-
-    return birdseye, birdseyeLeft, birdseyeRight, minv
-#### END - FUNCTION TO APPLY PERSPECTIVE WARP ##################################
-################################################################################
 
 
 
@@ -308,7 +245,7 @@ def general_search(binary_warped, left_fit, right_fit):
 
 ################################################################################
 #### START - FUNCTION TO MEASURE CURVE RADIUS ##################################
-def measure_lane_curvature(ploty, leftx, rightx):
+def measure_lane_curvature(ploty, leftx, rightx,ym_per_pix,xm_per_pix):
 
     leftx = leftx[::-1]  # Reverse to match top-to-bottom in y
     rightx = rightx[::-1]  # Reverse to match top-to-bottom in y
@@ -323,7 +260,7 @@ def measure_lane_curvature(ploty, leftx, rightx):
     # Calculate the new radii of curvature
     left_curverad  = ((1 + (2*left_fit_cr[0]*y_eval*ym_per_pix + left_fit_cr[1])**2)**1.5) / np.absolute(2*left_fit_cr[0])
     right_curverad = ((1 + (2*right_fit_cr[0]*y_eval*ym_per_pix + right_fit_cr[1])**2)**1.5) / np.absolute(2*right_fit_cr[0])
-    # Now our radius of curvature is in meters
+    # Now our radius of curvature is in cm
     # print(left_curverad, 'm', right_curverad, 'm')
 
     # Decide if it is a left or a right curve
@@ -378,7 +315,7 @@ def draw_lane_lines(original_image, warped_image, Minv, draw_info):
 
 def offCenter(meanPts, inpFrame):
 
-    # Calculating deviation in meters
+    # Calculating deviation in cm
     mpts = meanPts[-1][-1][-2].astype(int)
     pixelDeviation = inpFrame.shape[1] / 2 - abs(mpts)
     deviation = pixelDeviation * xm_per_pix
@@ -433,106 +370,106 @@ def addText(img, radius, direction, deviation, devDirection):
 ################################################################################
 ######## START - MAIN FUNCTION #################################################
 ################################################################################
-import time
-
-start_time = time.time()
-
-# Read the input image
-image = readVideo()
-
-################################################################################
-#### START - LOOP TO PLAY THE INPUT IMAGE ######################################
-while True:
-    try:
-
-        _, frame = image.read()
-
-
-
-        if not _:
-            break
-        # Apply perspective warping by calling the "perspectiveWarp()" function
-        # Then assign it to the variable called (birdView)
-        # Provide this function with:
-        # 1- an image to apply perspective warping (frame)
-        birdView, birdViewL, birdViewR, minverse = perspectiveWarp(frame)
-
-
-        # Apply image processing by calling the "processImage()" function
-        # Then assign their respective variables (img, hls, grayscale, thresh, blur, canny)
-        # Provide this function with:
-        # 1- an already perspective warped image to process (birdView)
-        img, hls, grayscale, thresh, blur, canny = processImage(birdView)
-        imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
-        imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
-
-        # Plot and display the histogram by calling the "get_histogram()" function
-        # Provide this function with:
-        # 1- an image to calculate histogram on (thresh)
-        hist, leftBase, rightBase = plotHistogram(thresh)
-        # # print(rightBase - leftBase)
-        #plt.plot(hist)
-
-        #plt.show()
-
-        #
-        if not _:
-            break
-        #(frame)
-        ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, hist)
-        plt.plot(left_fit)
-        #plt.show()
-        #
-        #
-        draw_info = general_search(thresh, left_fit, right_fit)
-        #plt.show()
-        #
-        #
-
-        curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
-        #
-        #
-        # # Filling the area of detected lanes with green
-        meanPts, result = draw_lane_lines(frame, thresh, minverse, draw_info)
-        #
-        #
-        deviation, directionDev = offCenter(meanPts, frame)
-        #
-        #
-        # # Adding text to our final image
-        finalImg = addText(result, curveRad, curveDir, deviation, directionDev)
-        #
-        # # Displaying final image
-        cv2.imshow("Final", finalImg)
-  #      out.write(finalImg)
-        #
-
-        # Wait for the ENTER key to be pressed to stop playback
-        if cv2.waitKey(1) == 13:
-            break
-    except Exception as e:
-        elapsed_time = time.time() - start_time
-        print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
-        print("Error message:", e)
-        continue
-#### END - LOOP TO PLAY THE INPUT IMAGE ########################################
-################################################################################
-
-# Cleanup
-out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (xresolution,yresolution))
-
-image.release()
-cv2.destroyAllWindows()
-
-################################################################################
-######## END - MAIN FUNCTION ###################################################
-################################################################################
-
-
-
-
-
-
+# import time
+#
+# start_time = time.time()
+#
+# # Read the input image
+# frame = cv2.imread('Testpic.png')
+#
+# # Display the loaded image
+# cv2.imshow('image', frame)
+#
+# #######################################
+# #### START - LOOP TO PLAY THE INPUT IMAGE ######################################
+#
+# try:
+#
+#
+#
+#     ##FRAME IS CV2 IMage
+#
+#
+#     # Apply perspective warping by calling the "perspectiveWarp()" function
+#     # Then assign it to the variable called (birdView)
+#     # Provide this function with:
+#     # 1- an image to apply perspective warping (frame)
+#     birdView, birdViewL, birdViewR, minverse = perspectiveWarp(frame)
+#
+#
+#     # Apply image processing by calling the "processImage()" function
+#     # Then assign their respective variables (img, hls, grayscale, thresh, blur, canny)
+#     # Provide this function with:
+#     # 1- an already perspective warped image to process (birdView)
+#     img, hls, grayscale, thresh, blur, canny = processImage(birdView)
+#     imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
+#     imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
+#
+#     # Plot and display the histogram by calling the "get_histogram()" function
+#     # Provide this function with:
+#     # 1- an image to calculate histogram on (thresh)
+#     hist, leftBase, rightBase = plotHistogram(thresh)
+#     # # print(rightBase - leftBase)
+#     #plt.plot(hist)
+#
+#     #plt.show()
+#
+#     #
+#
+#     #(frame)
+#     ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, hist)
+#     plt.plot(left_fit)
+#     #plt.show()
+#     #
+#     #
+#     draw_info = general_search(thresh, left_fit, right_fit)
+#     #plt.show()
+#     #
+#     #
+#
+#     curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
+#     #
+#     #
+#     # # Filling the area of detected lanes with green
+#     meanPts, result = draw_lane_lines(frame, thresh, minverse, draw_info)
+#     #
+#     #
+#     deviation, directionDev = offCenter(meanPts, frame)
+#     #
+#     #
+#     # # Adding text to our final image
+#     finalImg = addText(result, curveRad, curveDir, deviation, directionDev)
+#     #
+#     # # Displaying final image
+#     cv2.imshow("Final", finalImg)
+# #      out.write(finalImg)
+#     #
+#
+#     # Wait for the ENTER key to be pressed to stop playback
+#
+# except Exception as e:
+#     elapsed_time = time.time() - start_time
+#     print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
+#     print("Error message:", e)
+#
+# #### END - LOOP TO PLAY THE INPUT IMAGE ########################################
+# ################################################################################
+#
+# # Cleanup
+# #out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (xresolution,yresolution))
+#
+#
+# cv2.destroyAllWindows()
+#
+# ################################################################################
+# ######## END - MAIN FUNCTION ###################################################
+# ################################################################################
+#
+#
+#
+#
+#
+#
 
 
 
