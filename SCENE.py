@@ -25,11 +25,15 @@ xm_per_pix = 35  / camera_resolutionx
 
 
 class PScene:
-    def __init__(self, SensingInput = []):
+    def __init__(self, SensingInput = None):
         self.camera_resolution = camera_resolutionx
         self.camera_resolution = camera_resolutiony
-        #SensingInput.colorframe
-        #SensingInput.colorframe
+        sampleframe = cv2.imread(r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\reallofscenter.png")
+        if(SensingInput is not None):
+            self.frame = SensingInput.get_COLORFRAME()
+        else:
+            self.frame = sampleframe
+
         ##    self.intersection_detection = np.zeros((camera_resolution[0], camera_resolution[1]))
         ##    self.midlane = np.zeros((camera_resolution[0], camera_resolution[1]))
         self.sign_trigger = False
@@ -38,6 +42,9 @@ class PScene:
         self.position = 0
         self.SensingInput = SensingInput
         self.objecttrigger = False
+        self.position = 0
+        self.deviation = 0
+        self.direction= 0
 
     def runobjectdetection(self,frame):
 
@@ -69,33 +76,34 @@ class PScene:
         ## in case you need it for the tensor function param
 
 
-    def lanenode(self,frame):
+    def lanenode(self):
         try:
-            birdView, birdViewL, birdViewR, minverse = perspectiveWarp(frame)
+            birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.frame)
             img, hls, grayscale, thresh, blur, canny = processImage(birdView)
             imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
             imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
             histogram, leftxBase, rightxBase,midpoint = plotHistogram(thresh)
             ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, histogram)
             draw_info = general_search(thresh, left_fit, right_fit)
-            curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,ym_per_pix,xm_per_pix)
+
             #     #
             #     #
             #     # # Filling the area of detected lanes with green
-            meanPts, result = draw_lane_lines(frame, thresh, minverse, draw_info)
+            meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
 
             mpts = meanPts[-1][-1][-2].astype(int)
-            pixelDeviation = frame.shape[1] / 2 - abs(mpts)
+            pixelDeviation = self.frame.shape[1] / 2 - abs(mpts)
 
             deviation = pixelDeviation * xm_per_pix
             direction = "left" if deviation < 0 else "right"
-
-            print(deviation)
-            print(direction)
+            ##curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,ym_per_pix,xm_per_pix) ## IF curavture is needed its available
+            # print(deviation)
+            # print(direction)
             #cv2.imshow('birdView', hlsR)
 
             #print(draw_info)
-
+            self.deviation = deviation
+            self.direction = direction
             return deviation,direction
 
             #ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, hist)
@@ -146,9 +154,9 @@ class PScene:
         return self.vehicle_data
 
     def __str__(self):
-        return 'midlane: {}\nsign_trigger: {}\nintersection_trigger: {}\ntraffic_light_trigger: {}\nposition: {}\n'.format(
+        return 'midlane: {}\ndeviation:{}\ndirection:{}\nsign_trigger: {}\nintersection_trigger: {}\ntraffic_light_trigger: {}\nposition: {}\n'.format(
             0,
-            self.sign_trigger, self.intersection_trigger, self.traffic_light_trigger, self.position)
+            self.sign_trigger,self.deviation,self.direction ,self.intersection_trigger, self.traffic_light_trigger, self.position)
 
 ################################################################################
 #### START - FUNCTION TO APPLY PERSPECTIVE WARP ################################
@@ -156,7 +164,7 @@ def perspectiveWarp(inpImage):
 
     # Get image size
     img_size = (inpImage.shape[1], inpImage.shape[0])
-    print(img_size)
+    #print(img_size)
     # Perspective points to be warped
     ############ update this to identify region lane of interest based on lens of camera
 
@@ -206,3 +214,35 @@ def perspectiveWarp(inpImage):
 #### END - FUNCTION TO APPLY PERSPECTIVE WARP ##################################
 ################################################################################
 
+
+# import time
+#
+# Scene = PScene()
+#
+# start_time = time.time()
+#
+# # Read the input image
+#
+# #
+# # # Display the loaded image
+# # #cv2.imshow('image', frame)
+# #
+# print(Scene.lanenode())
+# print(Scene)
+#
+# #
+# # #cv2.imshow('birdView', img)
+# #
+# # cv2.waitKey(0)
+# # cv2.destroyAllWindows()
+# start_time = time.time()  # Start timer
+# num_iterations = 1000   # Replace with the actual number of iterations in your loop
+#
+# # Loop code goes here
+# for i in range(num_iterations):
+#     Scene.lanenode()
+#
+# end_time = time.time()  # Stop timer
+# iterations_per_sec = num_iterations / (end_time - start_time)
+#
+# print(f"Iterations per second: {iterations_per_sec:.2f}")
