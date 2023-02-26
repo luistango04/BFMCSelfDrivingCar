@@ -39,9 +39,15 @@ class SensingInput:
       
                     self.velo = rpm * diameterofwheel ## Diameter of wheel
                     print(rpm)
- 			
+ 				
                     return self.velo 
+            else:
+               print('No data from serial')
+               self.velo = 0
+               return self.velo 
+
            except:
+		
             print("ERROR IN RPM")
             return 0
     def gettilt(self):

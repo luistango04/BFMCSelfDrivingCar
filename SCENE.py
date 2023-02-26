@@ -28,10 +28,11 @@ class PScene:
     def __init__(self, SensingInput = None):
         self.camera_resolution = camera_resolutionx
         self.camera_resolution = camera_resolutiony
-        sampleframe = cv2.imread(r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\reallofscenter.png")
+        
         if(SensingInput is not None):
             self.frame = SensingInput.get_COLORFRAME()
         else:
+            sampleframe = cv2.imread(r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\reallofscenter.png")
             self.frame = sampleframe
 
         ##    self.intersection_detection = np.zeros((camera_resolution[0], camera_resolution[1]))
@@ -45,6 +46,13 @@ class PScene:
         self.position = 0
         self.deviation = 0
         self.direction= 0
+    def __call__(self, SensingInput = None):
+        if(SensingInput is not None):
+            self.frame = SensingInput.get_COLORFRAME()
+        else:
+            sampleframe = cv2.imread(r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\reallofscenter.png")
+            self.frame = sampleframe
+	
 
     def runobjectdetection(self,frame):
 

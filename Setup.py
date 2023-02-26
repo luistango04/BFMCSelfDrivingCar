@@ -28,8 +28,8 @@ def camerainit():
         print("The demo requires Depth camera with Color sensor")
         exit(0)
 
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-    #config.enable_stream(rs.stream.color, xresolution, yresolution, rs.format.bgr8, 30)
+    #config.enable_stream(rs.stream.depth, 320, 240, rs.format.z16, 30)
+    config.enable_stream(rs.stream.color, xresolution, yresolution, rs.format.bgr8, 30)
 
     # Start streaming
     pipeline.start(config)

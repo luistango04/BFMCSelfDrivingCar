@@ -60,7 +60,8 @@ class Actuation:
         # print('##')
         # print(self.acceleration  * step)
 
-
+        print(carspeed)
+        print(self.velocity)
         # If the current speed is less than the target velocity, increase the speed
         if (carspeed < self.velocity):
             carspeed = min(self.velocity, max(.15,carspeed + (self.acceleration * step)))  ## DAMPENINING  #15 withot PID .1PID
