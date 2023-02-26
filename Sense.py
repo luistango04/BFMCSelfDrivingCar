@@ -2,6 +2,10 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pyrealsense2 as rs
+import Setup
+Setup.init()  
+
+
 global diameterofwheel 
 diameterofwheel = 65
 

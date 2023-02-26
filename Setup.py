@@ -1,18 +1,38 @@
+import time
+
 import pyrealsense2 as rs
-global yresolution
-yresolution = 240  # 720
-global xresolution
-xresolution = 320  # 420
 
+def init():
+	global camera_resolutionx
+	global camera_resolutiony
+	global starttime 
+	starttime = time.time()
+	camera_resolutionx = 320
+	camera_resolutiony = 240
+	global xm_per_pix
+	global ym_per_pix
 
+	# Defining variables to hold meter-to-pixel conversion
+	ym_per_pix = 280 / camera_resolutiony#  ## GUESSING ITS ABOUT THIS FAR Standard lane width is 3.7 cm divided by lane width in 		pixels which is NEEDS TUNING
+	# calculated to be approximately 720 pixels not to be confused with frame height
+	xm_per_pix = 35  / camera_resolutionx
+	starttime = time.time()  ## PROOGRAM START
+	
 
 def camerainit():
     import pyrealsense2 as rs
 
+	
     # Configure depth and color streams
     pipeline = rs.pipeline()
     config = rs.config()
-    
+    try:	 
+	    for dev in context.query_devices():
+	     for sensor in dev.sensors:
+	      sensor.stop()
+	      sensor.close()
+	     dev.close()
+ 
     # Get device product line for setting a supporting resolution
     pipeline_wrapper = rs.pipeline_wrapper(pipeline)
     pipeline_profile = config.resolve(pipeline_wrapper)
@@ -29,7 +49,7 @@ def camerainit():
         exit(0)
 
     #config.enable_stream(rs.stream.depth, 320, 240, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, xresolution, yresolution, rs.format.bgr8, 30)
+    config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
 
     # Start streaming
     pipeline.start(config)

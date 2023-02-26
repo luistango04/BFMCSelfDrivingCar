@@ -1,33 +1,24 @@
 import sys
+import Setup
+Setup.init()
 from lanedetection import processImage,plotHistogram,slide_window_search,general_search,measure_lane_curvature,draw_lane_lines
 #from Sign_detection_yolo import detect
 sys.path.append('.')
 import matplotlib.pyplot as plt
-global camera_resolutionx
-global camera_resolutiony
 import cv2
 import numpy as np
 import os
 from scipy import optimize
 from matplotlib import pyplot as plt, cm, colors
-
-
-camera_resolutionx = 320
-camera_resolutiony = 240
-global xm_per_pix
-global ym_per_pix
-# Defining variables to hold meter-to-pixel conversion
-ym_per_pix = 280 / camera_resolutiony#  ## GUESSING ITS ABOUT THIS FAR Standard lane width is 3.7 cm divided by lane width in pixels which is NEEDS TUNING
-# calculated to be approximately 720 pixels not to be confused with frame height
-xm_per_pix = 35  / camera_resolutionx
+import time
 
 
 
 
 class PScene:
     def __init__(self, SensingInput = None):
-        self.camera_resolution = camera_resolutionx
-        self.camera_resolution = camera_resolutiony
+        self.camera_resolution = Setup.camera_resolutionx
+        self.camera_resolution = Setup.camera_resolutiony
         
         if(SensingInput is not None):
             self.frame = SensingInput.get_COLORFRAME()
@@ -93,7 +84,8 @@ class PScene:
             histogram, leftxBase, rightxBase,midpoint = plotHistogram(thresh)
             ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, histogram)
             draw_info = general_search(thresh, left_fit, right_fit)
-
+            curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
+            
             #     #
             #     #
             #     # # Filling the area of detected lanes with green
@@ -102,13 +94,17 @@ class PScene:
             mpts = meanPts[-1][-1][-2].astype(int)
             pixelDeviation = self.frame.shape[1] / 2 - abs(mpts)
 
-            deviation = pixelDeviation * xm_per_pix
+            deviation = pixelDeviation * Setup.xm_per_pix
             direction = "left" if deviation < 0 else "right"
-            ##curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,ym_per_pix,xm_per_pix) ## IF curavture is needed its available
+            print(ym_per_pix)
+            curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,Setup.ym_per_pix,Setup.xm_per_pix) ## IF curavture is needed
+            meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
             # print(deviation)
             # print(direction)
-            #cv2.imshow('birdView', hlsR)
 
+   
+            cv2.imshow('birdViewR', hlsR)
+            cv2.imshow('birdViewL', hlsL)
             #print(draw_info)
             self.deviation = deviation
             self.direction = direction
@@ -120,7 +116,7 @@ class PScene:
             return img, hls, grayscale, thresh, blur, canny
 
         except Exception as e:
-            elapsed_time = time.time() - start_time
+            elapsed_time = time.time() - Setup.starttime
             print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
             print("Error message:", e)
 
@@ -169,17 +165,21 @@ class PScene:
 ################################################################################
 #### START - FUNCTION TO APPLY PERSPECTIVE WARP ################################
 def perspectiveWarp(inpImage):
-
+    camera_resolutionx = Setup.camera_resolutionx
+    camera_resolutiony = Setup.camera_resolutiony
+    frame = inpImage 
     # Get image size
     img_size = (inpImage.shape[1], inpImage.shape[0])
     #print(img_size)
     # Perspective points to be warped
     ############ update this to identify region lane of interest based on lens of camera
+	
+    c1 = ((int) (.3*camera_resolutionx),(int)(.6*camera_resolutiony)) ## TOP LEFT
+    c2 =   (0,(int) (1.0*camera_resolutiony)) ## BOTTOM LEFT
+    c2 =   (0,(int) (1.0*camera_resolutiony)) ## BOTTOM LEFT
 
-    c1 = ((int) (.2*camera_resolutionx),(int)(.3*camera_resolutiony)) ## TOP LEFT
-    c2 =   [0,(int) (.7*camera_resolutiony)] ## BOTTOM LEFT
-    c3 =  [camera_resolutionx, (int)(.7*camera_resolutiony)]   ## BOTTOM RIGHT
-    c4 =      [(int) (.8*camera_resolutionx),(int)(.3*camera_resolutiony)] #TOP RIGHT
+    c3 =  (camera_resolutionx, (int)(1.0*camera_resolutiony))   ## BOTTOM RIGHT
+    c4 =      ((int) (.7*camera_resolutionx),(int)(.6*camera_resolutiony)) #TOP RIGHT
     ##
 
     src = np.float32([c1,c2,c3,c4])
@@ -189,17 +189,17 @@ def perspectiveWarp(inpImage):
     p2 = [0,camera_resolutiony]  ## BOTTOM LEFT
     p3 = [camera_resolutionx,camera_resolutiony]  ## BOTTOM RIGHT
     p4 = [camera_resolutionx,0]  # TOP RIGHT
-
+    p5 = [camera_resolutionx/2,0]  # TOP RIGHT
     dst = np.float32([p1,p2,p3,p4])
 
     # Matrix to warp the image for birdseye window
     matrix = cv2.getPerspectiveTransform(src, dst)
-    #cv2.imshow("myetest2",matrix)
-    # cv2.circle(frame,c1,5,(0,0,255),-1)
-    # cv2.circle(frame,c2,5,(0,0,255),-1)
-    # cv2.circle(frame,c3,5,(0,0,255),-1)
-    # cv2.circle(frame,c4,5,(0,0,255),-1)
-    # #cv2.imshow("mytest", frame)
+    cv2.imshow("myetest2",matrix)
+    cv2.circle(frame,c1,5,(0,0,255),-1)
+    cv2.circle(frame,c2,5,(0,0,255),-1)
+    cv2.circle(frame,c3,5,(0,0,255),-1)
+    cv2.circle(frame,c4,5,(0,0,255),-1)
+    cv2.imshow("ROIS", frame)
 
     # Inverse matrix to unwarp the image for final window
     minv = cv2.getPerspectiveTransform(dst, src)

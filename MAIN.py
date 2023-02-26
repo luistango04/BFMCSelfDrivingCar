@@ -1,8 +1,12 @@
 import sys
+import Setup
+Setup.init()  
+
 from SCENE import *
 from  Sense import SensingInput
 from  Actuation import Actuation
 from  Setup import camerainit, pidcarsetting
+
 from VehicleControl import VehicleControl
 from unittest.mock import Mock
 import serial
@@ -13,7 +17,7 @@ sys.path.append('.')
 
 #ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
 
-ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
+ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 ser.flush()
 
 global depthsensor
@@ -36,9 +40,9 @@ global VEHICLE
 
 
 
-starttime = time.time()  ## PROOGRAM START
 
-lasttime = starttime
+
+lasttime = Setup.starttime
 pipeline = camerainit() ### INITIALIzES CAMREA
 pidcarsetting(0.1, 0.03, 0.0005, 0.3, 5, ser)  ## SETS UP THE CAR
 
@@ -59,9 +63,10 @@ while True:
     scene = PScene(sensing)
     ## MAKE A SCENE
     print(scene.lanenode())
-
-#    cv2.waitKey(0)
-#    cv2.destroyAllWindows()
+    cv2.imshow("startview", sensing.get_COLORFRAME())
+  
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
      # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
 
 	

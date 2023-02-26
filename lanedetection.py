@@ -8,6 +8,7 @@
 
 
 # IMPORT NECESSARY LIBRARIES
+import Setup
 import cv2
 import numpy as np
 import os
@@ -15,7 +16,8 @@ from scipy import optimize
 from matplotlib import pyplot as plt, cm, colors
 
 
-
+xm_per_pix = Setup.xm_per_pix
+ym_per_pix = Setup.ym_per_pix
 # Get path to the current working directory
 CWD_PATH = os.getcwd()
 
