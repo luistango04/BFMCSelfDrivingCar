@@ -26,13 +26,7 @@ def camerainit():
     # Configure depth and color streams
     pipeline = rs.pipeline()
     config = rs.config()
-    try:	 
-	    for dev in context.query_devices():
-	     for sensor in dev.sensors:
-	      sensor.stop()
-	      sensor.close()
-	     dev.close()
- 
+
     # Get device product line for setting a supporting resolution
     pipeline_wrapper = rs.pipeline_wrapper(pipeline)
     pipeline_profile = config.resolve(pipeline_wrapper)

@@ -54,37 +54,40 @@ carspeed = 0
 vehicle = VehicleControl(0,0,0,ser)
 vehicle = vehicle(10, 1, 0.01,ser)  ## call function can be used for tesitng
 
+try:
+	while True:
+	    print("SENSING")
+	    sensing.senseall()
+	    print("SCENING")
+	    ## TESTING LANE DETECTION
+	    scene = PScene(sensing)
+	    ## MAKE A SCENE
+	    print(scene.lanenode())
+	    cv2.imshow("startview", sensing.get_COLORFRAME())
+	  
+	    cv2.waitKey(0)
+	    cv2.destroyAllWindows()
+	     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
 
-while True:
-    print("SENSING")
-    sensing.senseall()
-    print("SCENING")
-    ## TESTING LANE DETECTION
-    scene = PScene(sensing)
-    ## MAKE A SCENE
-    print(scene.lanenode())
-    cv2.imshow("startview", sensing.get_COLORFRAME())
-  
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-     # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
+		
 
-	
+	#    carspeed =sensing.velocity()
+	#    elapsed_time = lasttime - starttime
 
-#    carspeed =sensing.velocity()
-#    elapsed_time = lasttime - starttime
+	#    actuation = Actuation(vehicle,carspeed) ## Get carsoeed from sensor
+		    
 
-#    actuation = Actuation(vehicle,carspeed) ## Get carsoeed from sensor
-	    
+	#    a,b,carspeed = actuation.write_velocity_command(ser,lasttime,starttime)
+	    #print(carspeed)
 
-#    a,b,carspeed = actuation.write_velocity_command(ser,lasttime,starttime)
-    #print(carspeed)
+	    lasttime = time.time()
 
+	    time.sleep(.5)
 
+except KeyboardInterrupt:
+    print("Keyboard interrupt detected. Exiting...")
+pipeline.stop()
 
-    lasttime = time.time()
-
-    time.sleep(.5)
 
 
 # 1:speed;;

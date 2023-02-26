@@ -84,7 +84,7 @@ class PScene:
             histogram, leftxBase, rightxBase,midpoint = plotHistogram(thresh)
             ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, histogram)
             draw_info = general_search(thresh, left_fit, right_fit)
-            curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
+            #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
             
             #     #
             #     #
@@ -96,7 +96,7 @@ class PScene:
 
             deviation = pixelDeviation * Setup.xm_per_pix
             direction = "left" if deviation < 0 else "right"
-            print(ym_per_pix)
+            
             curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,Setup.ym_per_pix,Setup.xm_per_pix) ## IF curavture is needed
             meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
             # print(deviation)
@@ -189,7 +189,7 @@ def perspectiveWarp(inpImage):
     p2 = [0,camera_resolutiony]  ## BOTTOM LEFT
     p3 = [camera_resolutionx,camera_resolutiony]  ## BOTTOM RIGHT
     p4 = [camera_resolutionx,0]  # TOP RIGHT
-    p5 = [camera_resolutionx/2,0]  # TOP RIGHT
+    #p5 = [camera_resolutionx/2,0]  # TOP RIGHT
     dst = np.float32([p1,p2,p3,p4])
 
     # Matrix to warp the image for birdseye window

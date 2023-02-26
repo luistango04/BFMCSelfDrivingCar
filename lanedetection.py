@@ -16,64 +16,13 @@ from scipy import optimize
 from matplotlib import pyplot as plt, cm, colors
 
 
-xm_per_pix = Setup.xm_per_pix
-ym_per_pix = Setup.ym_per_pix
+
 # Get path to the current working directory
 CWD_PATH = os.getcwd()
 
 ############################################################################
 #### START - FUNCTION TO APPLY PERSPECTIVE WARP ################################
-def perspectiveWarp(inpImage):
 
-    # Get image size
-    img_size = (inpImage.shape[1], inpImage.shape[0])
-    print(img_size)
-    # Perspective points to be warped
-    ############ update this to identify region lane of interest based on lens of camera
-
-    c1 = ((int) (.2*camera_resolutionx),(int)(.3*camera_resolutiony)) ## TOP LEFT
-    c2 =   [0,(int) (.7*camera_resolutiony)] ## BOTTOM LEFT
-    c3 =  [camera_resolutionx, (int)(.7*camera_resolutiony)]   ## BOTTOM RIGHT
-    c4 =      [(int) (.8*camera_resolutionx),(int)(.3*camera_resolutiony)] #TOP RIGHT
-    ##
-
-    src = np.float32([c1,c2,c3,c4])
-
-    # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
-    p1 = [0,0]## TOP LEFT
-    p2 = [0,camera_resolutiony]  ## BOTTOM LEFT
-    p3 = [camera_resolutionx,camera_resolutiony]  ## BOTTOM RIGHT
-    p4 = [camera_resolutionx,0]  # TOP RIGHT
-
-    dst = np.float32([p1,p2,p3,p4])
-
-    # Matrix to warp the image for birdseye window
-    matrix = cv2.getPerspectiveTransform(src, dst)
-    #cv2.imshow("myetest2",matrix)
-    # cv2.circle(frame,c1,5,(0,0,255),-1)
-    # cv2.circle(frame,c2,5,(0,0,255),-1)
-    # cv2.circle(frame,c3,5,(0,0,255),-1)
-    # cv2.circle(frame,c4,5,(0,0,255),-1)
-    # #cv2.imshow("mytest", frame)
-
-    # Inverse matrix to unwarp the image for final window
-    minv = cv2.getPerspectiveTransform(dst, src)
-    birdseye = cv2.warpPerspective(inpImage, matrix, img_size)
-
-    # Get the birds
-    # eye window dimensions
-    height, width = birdseye.shape[:2]
-
-    # Divide the birdseye view into 2 halves to separate left & right lanes
-    birdseyeLeft  = birdseye[0:height, 0:width // 2]
-    birdseyeRight = birdseye[0:height, width // 2:width]
-
-#     Display birdseye view image
-    #cv2.imshow("Birdseye" , birdseye)
-    #cv2.imshow("Birdseye Left" , birdseyeLeft)
-    #cv2.imshow("Birdseye Right", birdseyeRight)
-
-    return birdseye, birdseyeLeft, birdseyeRight, minv
 #### END - FUNCTION TO APPLY PERSPECTIVE WARP ##################################
 ################################################################################
 
@@ -224,7 +173,7 @@ def slide_window_search(binary_warped, histogram):
     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
     out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
-    # plt.imshow(out_img)
+    plt.imshow(out_img)
     plt.plot(left_fitx,  ploty, color = 'yellow')
     plt.plot(right_fitx, ploty, color = 'yellow')
     plt.xlim(0, 1280)
