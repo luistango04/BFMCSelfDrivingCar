@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pyrealsense2 as rs
 import Setup
-Setup.init()  
+
 
 
 global diameterofwheel 
@@ -11,24 +11,100 @@ diameterofwheel = 65
 
 class SensingInput:
     def __init__(self,ser,pipeline, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
+        self.pipeline = pipeline ##
         self.speed = 0
         self.colorframe = []
         self.ser = ser
+        self.accel = 0
+        self.gyro = 0
         self.velo = 0
         self.tilt = 0
-        self.pipeline = pipeline ##
 
-    def import_image(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
-        try:
-            frames = self.pipeline.wait_for_frames()
-            colorframe = frames.get_color_frame()
-            color_image = np.asanyarray(colorframe.get_data())
-            self.colorframe = color_image
+        self.imu =  0   ## 0 is no imu 1 is imu
+
+    def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
+        # try:
+
+        ##try:
+
+            # Wait for frames
+            frames =self.pipeline.wait_for_frames()
+
+
+            color_frame = frames.get_color_frame()
+
+            # Convert the color frame to a NumPy array
+            color_array = np.asanyarray(color_frame.get_data())
+                    # Get the depth frame
+            depth_frame = frames.get_depth_frame()
+
+            # self.gyro = gyro_data(f[3].as_motion_frame().get_motion_data())
+            self.colorframe = frames.get_color_frame()
+
+            self.color_array = np.asanyarray(self.color_frame.get_data())
+            cv2.imshow("Color Image", self.colorframe)
+            print(self.colorframe)
+            self.depth = np.asanyarray(frames.get_depth_frame().get_data())
+            # Get the color frame
+            color_frame = frames.get_color_frame()
+
+            np.set_printoptions(threshold=np.inf)
+
+            # for y in range(480):
+            #
+            #     for x in range(640):
+            #         dist = self.depth.get_distance(x, y)
+            #         if 0 < dist and dist < 1:
+            #             coverage[x//10] += 1
+
+            # print(coverage)
+            # with open ('depth.txt', 'w') as f:
+            #     f.write(str(self.depth))
+            #     f.close()
+            #
+            # cv2.imwrite('depth.jpg', self.depth)
+            # Convert the depth frame to a NumPy array
+
+            # Convert the color frame to a NumPy array
+
+
+            # Convert the color image from BGR to RGB
+
+            # Display the depth image
+            #cv2.imshow("Depth Image", depth_image)
+
+            # Display the color image
+            #cv2.imshow("Color Image", color_image)
+
+            # Wait for a key press
+            key = cv2.waitKey(1)
+
+            # Exit the loop if the 'q' key is pressed
+
+
+        ##finally:
+
+
+            #self.accel = accel_data(f[2].as_motion_frame().get_motion_data())
+
+            #self.tilt = f[1].as_motion_frame().get_motion_data().z
+
+            #print("accelerometer: ", self.accel)
+            #print("gyro: ", self.gyro)
+
+
+
+
             return 1
 
-        except:
-            print("CAMERA NOT FOUND")
-            return 0
+
+    # def getimu(self):
+    #     try:
+    #         ### DO THS JOB to get the IMU ALUES
+    #     return [x,y,z,etc]
+    #     except:
+    #         print("IMU NOT FOUND")
+    #         return 0
     def velocity(self):
            try:
             # Read a line of data from the serial port
@@ -56,8 +132,6 @@ class SensingInput:
             return 0
     def gettilt(self):
 
-        depth_sensor = self.pipeline.get_active_profile().get_device().first_depth_sensor()
-
         # Get the current tilt angle
          ##tilt_angle = depth_sensor.get_option(rs.option.camera_angle)
 
@@ -70,11 +144,13 @@ class SensingInput:
      	
         self.velocity()
 
-        results = self.import_image()
+        results = self.Intellsensor()
 
         return self.tilt,self.velo
 
     def get_COLORFRAME(self):
+
+
         return self.colorframe
 
     def get_GPS(self):
@@ -109,3 +185,12 @@ class SensingInput:
 
     def get_BNO_POS(self):
         return self.BNO_POS
+
+def gyro_data(gyro):
+    return np.asarray([gyro.x, gyro.y, gyro.z])
+
+
+def accel_data(accel):
+    return np.asarray([accel.x, accel.y, accel.z])
+
+

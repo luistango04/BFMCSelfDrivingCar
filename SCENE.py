@@ -1,6 +1,6 @@
 import sys
 import Setup
-Setup.init()
+
 from lanedetection import processImage,plotHistogram,slide_window_search,general_search,measure_lane_curvature,draw_lane_lines
 #from Sign_detection_yolo import detect
 sys.path.append('.')
@@ -21,7 +21,9 @@ class PScene:
         self.camera_resolution = Setup.camera_resolutiony
         
         if(SensingInput is not None):
-            self.frame = SensingInput.get_COLORFRAME()
+            cv2.imshow("frame",SensingInput.colorframe)
+            self.frame = SensingInput.colorframe
+            print("FRAME IS NOT NONE")
         else:
             sampleframe = cv2.imread(r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\reallofscenter.png")
             self.frame = sampleframe
@@ -76,7 +78,8 @@ class PScene:
 
 
     def lanenode(self):
-        try:
+        # try:
+            cv2.imshow('frame', self.frame)
             birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.frame)
             img, hls, grayscale, thresh, blur, canny = processImage(birdView)
             imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
@@ -115,7 +118,7 @@ class PScene:
 
             return img, hls, grayscale, thresh, blur, canny
 
-        except Exception as e:
+        # except Exception as e:
             elapsed_time = time.time() - Setup.starttime
             print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
             print("Error message:", e)

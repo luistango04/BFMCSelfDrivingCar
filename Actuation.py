@@ -18,7 +18,7 @@ lastangle = 0
 
 class Actuation:
     def __init__(self,VehicleControl,carspeed):
-
+        self.commandlist = VehicleControl.actuationchoreography
         self.steering = VehicleControl.get_steering()
         self.angularacceleration = 10
         self.carspeed = carspeed
@@ -95,6 +95,7 @@ class Actuation:
             ser (serial.Serial): The serial port to write the command to.
             lastangle (float): The last recorded anle of the device.
 
+
         Returns:
             Tuple: A tuple containing the following values:
                 int:
@@ -105,25 +106,10 @@ class Actuation:
                 float: The time elapsed since the start of the function.
         """
 
-        # Calculate the time step since the last update
-        step = time.time() - lasttime
+        command = f"#2:{self.steeringangle};;\r\n".encode()
 
-        # Initialize the current angle with the last recorded angle
-        steeringangle = lastangle
-
-        # If the current angle is less than the target steering, increase the angle
-        if (steeringangle < self.steering):
-            steeringangle = min(self.steering, steeringangle + (self.angularacceleration * step)) ## DAMPENINING
-
-        # If the current angle is greater than the target steering angle, decrease the angle
-        elif (steeringangle > self.steering):
-            steeringangle = max(self.steering, steeringangle - (self.angularacceleration * step))
-
-        # Encode the command string and write it to the serial port
-        command = f"#2:{steeringangle};;\r\n".encode()
-        print("Current Angle:" + str(round(steeringangle)) + "  target =" + str(
-            round(self.steering)) + "  seconds  elapsed :" + str(time.time() - starttime))
         print("PRINTED: " + str(command) + " To console")
+
         ser.write(command)
 
         # If the current angle is equal to the target steering angle, return 1

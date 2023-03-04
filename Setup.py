@@ -1,50 +1,46 @@
 import time
-
+import cv2
+import numpy as np
+import pyrealsense2 as rs
 import pyrealsense2 as rs
 
+
 def init():
-	global camera_resolutionx
-	global camera_resolutiony
-	global starttime 
-	starttime = time.time()
-	camera_resolutionx = 320
-	camera_resolutiony = 240
-	global xm_per_pix
-	global ym_per_pix
+    global camera_resolutionx
+    global camera_resolutiony
+    global starttime
+    starttime = time.time()
+    camera_resolutionx = 320
+    camera_resolutiony = 240
+    global xm_per_pix
+    global ym_per_pix
 
-	# Defining variables to hold meter-to-pixel conversion
-	ym_per_pix = 280 / camera_resolutiony#  ## GUESSING ITS ABOUT THIS FAR Standard lane width is 3.7 cm divided by lane width in 		pixels which is NEEDS TUNING
-	# calculated to be approximately 720 pixels not to be confused with frame height
-	xm_per_pix = 35  / camera_resolutionx
-	starttime = time.time()  ## PROOGRAM START
-	
+    # Defining variables to hold meter-to-pixel conversion
+    ym_per_pix = 280 / camera_resolutiony#  ## GUESSING ITS ABOUT THIS FAR Standard lane width is 3.7 cm divided by lane width in 		pixels which is NEEDS TUNING
+    # calculated to be approximately 720 pixels not to be confused with frame height
+    xm_per_pix = 35  / camera_resolutionx
+    starttime = time.time()  ## PROOGRAM START
+    ## RUN THIS TO DO SET SENSOR
+    pipeline = camerainit(camera_resolutionx, camera_resolutiony)
+    return pipeline
 
-def camerainit():
-    import pyrealsense2 as rs
+def camerainit(camera_resolutionx, camera_resolutiony):
 
-	
+
     # Configure depth and color streams
     pipeline = rs.pipeline()
+    # Configure the pipeline to stream both color, depth and motion
     config = rs.config()
-
-    # Get device product line for setting a supporting resolution
-    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
-    pipeline_profile = config.resolve(pipeline_wrapper)
-    device = pipeline_profile.get_device()
-    device_product_line = str(device.get_info(rs.camera_info.product_line))
-
-    found_rgb = False
-    for s in device.sensors:
-        if s.get_info(rs.camera_info.name) == 'RGB Camera':
-            found_rgb = True
-            break
-    if not found_rgb:
-        print("The demo requires Depth camera with Color sensor")
-        exit(0)
-
-    #config.enable_stream(rs.stream.depth, 320, 240, rs.format.z16, 30)
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
+    config.enable_stream(rs.stream.accel)
+    config.enable_stream(rs.stream.gyro)
 
+
+    # Display the color image using OpenCV
+
+    cv2.waitKey(1)
+    #    config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
     # Start streaming
     pipeline.start(config)
     return pipeline

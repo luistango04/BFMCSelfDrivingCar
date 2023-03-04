@@ -12,6 +12,9 @@ class VehicleControl:
         self.velorate = 0
         self.ser = ser
         self.accelrate = 0
+        self.preverrors = (0,0)
+        self.actuationchoreography  = []
+
 
     def __call__(self, steering, velorrate, accelrate,ser):
 
@@ -22,6 +25,11 @@ class VehicleControl:
 
         print("Instance is called via special method")
         return self
+
+    def flush(self):
+        self.ser.flush()
+
+        return self.steering
 
 
     def get_steering(self):
@@ -56,7 +64,9 @@ class VehicleControl:
 
 
 
-    def lanefollow(self, xcenter_lane=None, xcenter_image=None):
+    def lanefollow(self, ):
+        ## Flush serial
+        self.ser.flush()
         # stay and correct to center of Lane
         Kp = 0.1  # Proportional gain
         Kd = 0.01  # Derivative gain
@@ -68,8 +78,8 @@ class VehicleControl:
         # PD controller
         # while True:
         # Update error and derivative of error
-        error = xcenter_lane - xcenter_image
-        error_diff = error - prev_error
+
+        error_diff = error - self.prev_error
         prev_error = error
 
         # Calculate steering angle
@@ -77,9 +87,9 @@ class VehicleControl:
 
         # Limit the steering angle to the maximum and minimum values
         angle = max(min_angle, min(max_angle, angle))
-
+        print(angle)
         # Apply steering angle to the vehicle
-
+        self.steering = angle
         # speed is lastspeed
         return angle, VEHICLE.speed
 

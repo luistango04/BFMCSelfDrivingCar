@@ -1,9 +1,11 @@
 import sys
 import Setup
-Setup.init()  
+
 
 from SCENE import *
 from  Sense import SensingInput
+global depthsensor
+
 from  Actuation import Actuation
 from  Setup import camerainit, pidcarsetting
 
@@ -14,19 +16,6 @@ import cv2
 #from Sign_detection_yolo import detect
 import time
 sys.path.append('.')
-
-#ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
-
-ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
-ser.flush()
-
-global depthsensor
-
-## BSMF
-# Principal AUTHOR: Luis Carpi
-# BSMC Project Mobility Challenge
-# Self-dRiving RC car in 1 month of less.
-
 # utility imports
 # =============================== CONFIG =================================================
 enableStream = False
@@ -34,16 +23,30 @@ enableCameraSpoof = False
 enableRc = True
 # =============================== INITIALIZING PROCESSES =================================
 allProcesses = list()
-
 global lasttime
 global VEHICLE
 
+ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
+#ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+ser.flush()
+pipeline =  Setup.init()
+enableStream = False
+enableCameraSpoof = False
+enableRc = True
+# ======================
+## BSMF
+# Principal AUTHOR: Luis Carpi
+# BSMC Project Mobility Challenge
+# Self-dRiving RC car in 1 month of less.
 
 
 
 
-lasttime = Setup.starttime
-pipeline = camerainit() ### INITIALIzES CAMREA
+
+
+start_time = time.time()
+lasttime = time.time()
+
 pidcarsetting(0.1, 0.03, 0.0005, 0.3, 5, ser)  ## SETS UP THE CAR
 
 sensing = SensingInput(ser,pipeline)
@@ -60,9 +63,11 @@ try:
 	    sensing.senseall()
 	    print("SCENING")
 	    ## TESTING LANE DETECTION
-	    scene = PScene(sensing)
+#	    scene = PScene(sensing)
+
+
 	    ## MAKE A SCENE
-	    print(scene.lanenode())
+#	    print(scene.lanenode())
 	    cv2.imshow("startview", sensing.get_COLORFRAME())
 	  
 	    cv2.waitKey(0)
@@ -80,7 +85,7 @@ try:
 	#    a,b,carspeed = actuation.write_velocity_command(ser,lasttime,starttime)
 	    #print(carspeed)
 
-	    lasttime = time.time()
+	    lasttime = time.time()  - start_time
 
 	    time.sleep(.5)
 
