@@ -2,15 +2,16 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 import Setup
+from Sense import SensingInput
 pipeline = Setup.init()
-
+Sense = SensingInput(0,pipeline)
 # Create a RealSense pipeline
 
 
 try:
-
+    while True:
         # Wait for frames
-        frames = pipeline.wait_for_frames()
+        frames = Sense.pipeline.wait_for_frames()
 
         # Get the depth frame
         depth_frame = frames.get_depth_frame()
@@ -37,49 +38,11 @@ try:
         key = cv2.waitKey(1)
 
         # Exit the loop if the 'q' key is pressed
-
+        if key == ord('q'):
+            break
 
 finally:
     pipeline.stop()
 
 # Close the OpenCV windows
 cv2.destroyAllWindows()
-
-import paho.mqtt.client as mqtt
-import time
-
-# Define callbacks
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code " + str(rc))
-
-def on_publish(client, userdata, mid):
-    print("Message published")
-
-def on_message(client, userdata, message):
-    print("Message received: " + str(message.payload.decode()))
-
-# Create a client instance
-client = mqtt.Client()
-
-# Set the callbacks
-client.on_connect = on_connect
-client.on_publish = on_publish
-client.on_message = on_message
-
-# Connect to a broker
-client.connect("mqtt.eclipseprojects.io", 1883)
-
-# Start the network loop
-client.loop_start()
-
-# Publish a message
-client.publish("test/topic", "Hello, world!")
-
-# Subscribe to a topic
-client.subscribe("test/topic")
-
-# Wait for a message
-time.sleep(1)
-
-# Stop the network loop
-client.loop_stop()

@@ -1,86 +1,86 @@
-import sys
-import Setup
-
-from SCENE import *
-from  Sense import *
-from  Actuation import Actuation
-from  Setup import camerainit, pidcarsetting
-
-from VehicleControl import VehicleControl
-from unittest.mock import Mock
-import serial
+import pyrealsense2 as rs
+import numpy as np
 import cv2
-#from Sign_detection_yolo import detect
+import Setup
+from Sense import SensingInput
+from unittest.mock import Mock
+from SCENE import PScene
 import time
-
-global pipeline
-
-
-sys.path.append('.')
+from Brain import Brain
+from VehicleControl import vehiclecontrol
+pipeline = Setup.init()
+from Actuation import Actuation
 
 ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
-
 #ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+Sense = SensingInput(ser,pipeline)
 ser.flush()
 
-global depthsensor
+def test_fps(object_instance, num_frames=120):
+    """
+    Test the FPS of an object instance by measuring the time it takes to process a certain number of frames.
 
-## BSMF
-# Principal AUTHOR: Luis Carpi
-# BSMC Project Mobility Challenge
-# Self-dRiving RC car in 1 month of less.
+    Parameters:
+        object_instance (object): An instance of a class that has a "process_frame()" method that takes no arguments and returns None.
+        num_frames (int): The number of frames to process.
 
-# utility imports
-# =============================== CONFIG =================================================
-enableStream = False
-enableCameraSpoof = False
-enableRc = True
-# =============================== INITIALIZING PROCESSES =================================
-allProcesses = list()
+    Returns:
+        float: The estimated FPS of the object instance.
+    """
+    start_time = time.time()
+    for i in range(num_frames):
+        object_instance.senseall()
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    fps = num_frames / elapsed_time
+    return fps
 
-global lasttime
-global VEHICLE
 
-#sensing = SensingInput(ser,pipeline)
-global carspeed
-carspeed = 0
-#
-pipeline = Setup.init()
+test_fps(Sense, 120)
+# test the FPS of the processor object
+fps = test_fps(Sense)
 
-# Create a RealSense pipeline
-sensing = SensingInput(ser,pipeline)
+print(f"Estimated FPS: {fps:.2f}")
+
+Scene = PScene(Sense)
+Brain = Brain(Scene)
+vehiclecontrol = vehiclecontrol(Brain,ser,Sense)
+Actuation = Actuation(vehiclecontrol,ser)
+
+start_time = time.time()
 
 try:
     while True:
         print("SENSING")
-        sensing.senseall()
-        print("SCENING")
-        ## TESTING LANE DETECTION
-        scene = PScene(sensing)
-        scene.lanenode()
+        Sense.senseall()
+        Scene = PScene(Sense)
 
 
+        Scene.lane_detection()
+        Brain.update_from_scene(Scene)
+        print(Brain)
+        vehiclecontrol.updatefrombrainscene(Brain,Sense)
+        vehiclecontrol.lanefollow()
+        Actuation.update(vehiclecontrol)
+        Actuation.write_angle_command()
 
-        ## MAKE A SCENE
-        #	    print(scene.lanenode())
-#        cv2.imshow("startview", sensing.get_COLORFRAME())
+        #
+       # cv2.waitKey(5000)
+        #Scene.lane_detection()
+        # test the FPS of the processor object
 
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        # CONVERT MANEUVERS TO SIGNEL VEHICLE UNDERSTANDS.
 
-        #    carspeed =sensing.velocity()
-        #    elapsed_time = lasttime - starttime
+        pass
 
-        #    actuation = Actuation(vehicle,carspeed) ## Get carsoeed from sensor
 
-        #    a,b,carspeed = actuation.write_velocity_command(ser,lasttime,starttime)
-        # print(carspeed)
-
-#        lasttime = time.time() - start_time
-
-        time.sleep(.5)
 
 except KeyboardInterrupt:
-    print("Keyboard interrupt detected. Exiting...")
+		print("Keyboard interrupt detected. Exiting...")
 pipeline.stop()
+
+end_time = time.time()
+time_taken = end_time - start_time
+iterations_per_second = 1 / time_taken
+
+print("Iterations per second:", iterations_per_second)
+

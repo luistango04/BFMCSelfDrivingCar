@@ -4,12 +4,11 @@ import Setup
 from lanedetection import processImage,plotHistogram,slide_window_search,general_search,measure_lane_curvature,draw_lane_lines
 #from Sign_detection_yolo import detect
 sys.path.append('.')
-import matplotlib.pyplot as plt
+
 import cv2
 import numpy as np
-import os
-from scipy import optimize
-from matplotlib import pyplot as plt, cm, colors
+
+
 import time
 
 
@@ -19,11 +18,12 @@ class PScene:
     def __init__(self, SensingInput = None):
         self.camera_resolution = Setup.camera_resolutionx
         self.camera_resolution = Setup.camera_resolutiony
-        
+
         if(SensingInput is not None):
-            cv2.imshow("frame",SensingInput.colorframe)
-            self.frame = SensingInput.colorframe
+
+            self.colorframe = SensingInput.colorframe
             print("FRAME IS NOT NONE")
+            #cv2.imshow("COLOR", self.colorframe)
         else:
             sampleframe = cv2.imread(r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\reallofscenter.png")
             self.frame = sampleframe
@@ -39,12 +39,7 @@ class PScene:
         self.position = 0
         self.deviation = 0
         self.direction= 0
-    def __call__(self, SensingInput = None):
-        if(SensingInput is not None):
-            self.frame = SensingInput.get_COLORFRAME()
-        else:
-            sampleframe = cv2.imread(r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\reallofscenter.png")
-            self.frame = sampleframe
+
 	
 
     def runobjectdetection(self,frame):
@@ -77,10 +72,10 @@ class PScene:
         ## in case you need it for the tensor function param
 
 
-    def lanenode(self):
+    def lane_detection(self):
         # try:
-            cv2.imshow('frame', self.frame)
-            birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.frame)
+            #cv2.imshow('TEST', self.colorframe)
+            birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.colorframe)
             img, hls, grayscale, thresh, blur, canny = processImage(birdView)
             imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
             imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
@@ -92,22 +87,22 @@ class PScene:
             #     #
             #     #
             #     # # Filling the area of detected lanes with green
-            meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
+            meanPts, result = draw_lane_lines(self.colorframe, thresh, minverse, draw_info)
 
             mpts = meanPts[-1][-1][-2].astype(int)
-            pixelDeviation = self.frame.shape[1] / 2 - abs(mpts)
+            pixelDeviation = self.colorframe.shape[1] / 2 - abs(mpts)
 
             deviation = pixelDeviation * Setup.xm_per_pix
             direction = "left" if deviation < 0 else "right"
             
-            curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,Setup.ym_per_pix,Setup.xm_per_pix) ## IF curavture is needed
-            meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
+            #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,Setup.ym_per_pix,Setup.xm_per_pix) ## IF curavture is needed
+            #meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
             # print(deviation)
             # print(direction)
 
    
-            cv2.imshow('birdViewR', hlsR)
-            cv2.imshow('birdViewL', hlsL)
+            #cv2.imshow('birdViewR', hlsR)
+            #cv2.imshow('birdViewL', hlsL)
             #print(draw_info)
             self.deviation = deviation
             self.direction = direction
@@ -197,12 +192,12 @@ def perspectiveWarp(inpImage):
 
     # Matrix to warp the image for birdseye window
     matrix = cv2.getPerspectiveTransform(src, dst)
-    cv2.imshow("myetest2",matrix)
+    #cv2.imshow("myetest2",matrix)
     cv2.circle(frame,c1,5,(0,0,255),-1)
     cv2.circle(frame,c2,5,(0,0,255),-1)
     cv2.circle(frame,c3,5,(0,0,255),-1)
     cv2.circle(frame,c4,5,(0,0,255),-1)
-    cv2.imshow("ROIS", frame)
+    #cv2.imshow("ROIS", frame)
 
     # Inverse matrix to unwarp the image for final window
     minv = cv2.getPerspectiveTransform(dst, src)

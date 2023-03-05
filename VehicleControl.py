@@ -2,19 +2,23 @@
 
 
 
-class VehicleControl:
+class vehiclecontrol:
 
-    def __init__(self, brain, pscene, vehicle_data,ser):
+    def __init__(self, brain,ser, Sensinginput = None):
         self.brain = brain
-        self.pscene = pscene
-        self.vehicle_data = vehicle_data
+        self.Sensinginput = Sensinginput
+        self.prev_error = 0
         self.steering = 0
         self.velorate = 0
         self.ser = ser
         self.accelrate = 0
         self.preverrors = (0,0)
         self.actuationchoreography  = []
+        self.steeringcap = [-23,23]
 
+    def updatefrombrainscene(self, Brain,PScene):
+        self.brain = Brain
+        self.Sensinginput = PScene
 
     def __call__(self, steering, velorrate, accelrate,ser):
 
@@ -64,15 +68,16 @@ class VehicleControl:
 
 
 
-    def lanefollow(self, ):
+    def lanefollow(self):
         ## Flush serial
         self.ser.flush()
+
         # stay and correct to center of Lane
-        Kp = 0.1  # Proportional gain
-        Kd = 0.01  # Derivative gain
+        Kp = 1 # Proportional gain
+        Kd = 0.2  # Derivative gain
 
         # Define initial error and derivative of error
-        error = xcenter_lane - xcenter_image
+        error = self.brain.errortomid
         prev_error = 0
 
         # PD controller
@@ -80,18 +85,16 @@ class VehicleControl:
         # Update error and derivative of error
 
         error_diff = error - self.prev_error
-        prev_error = error
-
+        self.prev_error = error
+        print(error_diff)
         # Calculate steering angle
         angle = Kp * error + Kd * error_diff
 
-        # Limit the steering angle to the maximum and minimum values
-        angle = max(min_angle, min(max_angle, angle))
-        print(angle)
         # Apply steering angle to the vehicle
+
         self.steering = angle
         # speed is lastspeed
-        return angle, VEHICLE.speed
+        return angle
 
         # return to cruising speed
 

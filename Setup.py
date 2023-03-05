@@ -29,6 +29,7 @@ def camerainit(camera_resolutionx, camera_resolutiony):
 
     # Configure depth and color streams
     pipeline = rs.pipeline()
+
     # Configure the pipeline to stream both color, depth and motion
     config = rs.config()
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)

@@ -4,20 +4,30 @@ class Brain:
         if(PScene is not None):
 
             self.Objecttrigger = PScene.get_object_trigger()
-            self.midlane =  PScene.get_midlane()
+            self.midlane = PScene.deviation
             self.signtrigger =  PScene.get_sign_trigger()
-            self.intersectiontrigger =  PScene.intersection_trigger()
-            self.trafficlight = PScene.get_traffic_light_trigger()
+            self.intersectiontrigger =  PScene.intersection_trigger
+            self.trafficlight = PScene.traffic_light_trigger
             self.posandrotation =  PScene.get_position()
             self.intersection_navigation_trigger = PScene.position
         self.breaktrigger = 0
         self.roadsearch = 0
         self.switchlane = 0
         self.parkingtrigger = 0
-        self.errortomid = 0
+        self.errortomid = PScene.deviation
         self.speed =  0
         self.turn = 0
 
+    def update_from_scene(self, PScene):
+        if PScene is not None:
+            self.Objecttrigger = PScene.get_object_trigger()
+            self.midlane = PScene.deviation
+            self.signtrigger = PScene.get_sign_trigger()
+            self.intersectiontrigger = PScene.intersection_trigger
+            self.trafficlight = PScene.traffic_light_trigger
+            self.posandrotation = PScene.get_position()
+            self.intersection_navigation_trigger = PScene.position
+            self.errortomid = PScene.deviation
 
     @classmethod
     def from_values(cls, Objecttrigger, midlane, signtrigger, intersectiontrigger, trafficlight, posandrotation, intersection_navigation_trigger):
@@ -56,11 +66,10 @@ class FSM:
         self.state = new_state
         return output
 
-p_scene = PScene()
 
 # create a Brain instance using the from_values method
-brain = Brain.from_values(True, 30, True, False, "red", (0, 0, 0), "north")
+#brainTEST = Brain.from_values(True, 30, True, False, "red", (0, 0, 0), "north")
 
 # print the brain object to see the diagnostics
-print(brain)
+#print(brain)
 

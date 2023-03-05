@@ -13,98 +13,59 @@ class SensingInput:
     def __init__(self,ser,pipeline, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
         self.pipeline = pipeline ##
         self.speed = 0
-        self.colorframe = []
+        self.colorframe = 0
         self.ser = ser
         self.accel = 0
         self.gyro = 0
         self.velo = 0
         self.tilt = 0
-
+        self.counter = 1
         self.imu =  0   ## 0 is no imu 1 is imu
+        self.depth_image = 0
+        self.errorhandle = [] ##[intellisense, gps, imu, v2v, bno] #error handle
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
-        # try:
+        try:
+            frames = self.pipeline.wait_for_frames()
 
-        ##try:
+            # Get the depth frame
 
-            # Wait for frames
-            frames =self.pipeline.wait_for_frames()
-
-
-            color_frame = frames.get_color_frame()
-
-            # Convert the color frame to a NumPy array
-            color_array = np.asanyarray(color_frame.get_data())
-                    # Get the depth frame
-            depth_frame = frames.get_depth_frame()
-
-            # self.gyro = gyro_data(f[3].as_motion_frame().get_motion_data())
+            # Get the depth frame every 5th time
+            self.depth_image = frames.get_depth_frame()
+            self.depth_image = np.asanyarray(self.depth_image.get_data())
             self.colorframe = frames.get_color_frame()
+            self.colorframe = np.asanyarray(self.colorframe.get_data())
+            # Reset the counter
+            self.counter = 0
 
-            self.color_array = np.asanyarray(self.color_frame.get_data())
-            cv2.imshow("Color Image", self.colorframe)
-            print(self.colorframe)
-            self.depth = np.asanyarray(frames.get_depth_frame().get_data())
             # Get the color frame
-            color_frame = frames.get_color_frame()
 
-            np.set_printoptions(threshold=np.inf)
 
-            # for y in range(480):
-            #
-            #     for x in range(640):
-            #         dist = self.depth.get_distance(x, y)
-            #         if 0 < dist and dist < 1:
-            #             coverage[x//10] += 1
-
-            # print(coverage)
-            # with open ('depth.txt', 'w') as f:
-            #     f.write(str(self.depth))
-            #     f.close()
-            #
-            # cv2.imwrite('depth.jpg', self.depth)
             # Convert the depth frame to a NumPy array
 
+
+
             # Convert the color frame to a NumPy array
 
+            self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
 
-            # Convert the color image from BGR to RGB
-
+            self.gyro = gyro_data(frames[3].as_motion_frame().get_motion_data())
+            #print(self.gyro)
+            #print(self.accel)
             # Display the depth image
-            #cv2.imshow("Depth Image", depth_image)
 
-            # Display the color image
-            #cv2.imshow("Color Image", color_image)
 
+        except:
+            self.errorhandle.append(1) ## Returns 1 if intellisense fails to capture frame
+            return 0
+        finally:
+            return 1
             # Wait for a key press
-            key = cv2.waitKey(1)
 
             # Exit the loop if the 'q' key is pressed
 
 
-        ##finally:
 
-
-            #self.accel = accel_data(f[2].as_motion_frame().get_motion_data())
-
-            #self.tilt = f[1].as_motion_frame().get_motion_data().z
-
-            #print("accelerometer: ", self.accel)
-            #print("gyro: ", self.gyro)
-
-
-
-
-            return 1
-
-
-    # def getimu(self):
-    #     try:
-    #         ### DO THS JOB to get the IMU ALUES
-    #     return [x,y,z,etc]
-    #     except:
-    #         print("IMU NOT FOUND")
-    #         return 0
     def velocity(self):
            try:
             # Read a line of data from the serial port
@@ -142,11 +103,11 @@ class SensingInput:
 
     def senseall(self):  # runs through all methods to refresh the senses. ## returns bit to sendto debug layer
      	
-        self.velocity()
+        error1 = 0 #self.velocity()
 
-        results = self.Intellsensor()
+        error2 = self.Intellsensor()
 
-        return self.tilt,self.velo
+        return error1 + error2
 
     def get_COLORFRAME(self):
 

@@ -17,12 +17,23 @@ lastangle = 0
 
 
 class Actuation:
-    def __init__(self,VehicleControl,carspeed):
+    def __init__(self,VehicleControl,ser):
         self.commandlist = VehicleControl.actuationchoreography
-        self.steering = VehicleControl.get_steering()
+        self.steeringangle = VehicleControl.get_steering()
         self.angularacceleration = 10
-        self.carspeed = carspeed
         self.velocity = VehicleControl.get_velorate() * maxspeed
+        self.ser = ser
+
+        #print("VELO:" + str(self.velocity))
+        self.acceleration = VehicleControl.acc2()
+
+        #print("Accelo:" + str(self.acceleration))
+    def update(self,VehicleControl):
+        self.commandlist = VehicleControl.actuationchoreography
+        self.steeringangle = VehicleControl.get_steering()
+        self.angularacceleration = 10
+        self.velocity = VehicleControl.get_velorate() * maxspeed
+
 
         #print("VELO:" + str(self.velocity))
         self.acceleration = VehicleControl.acc2()
@@ -76,7 +87,7 @@ class Actuation:
         command = f"#1:{carspeed};;\r\n".encode()
         print("Current Speed:" + str(round(carspeed,8)) + "  target =" + str(self.velocity) + "  seconds  elapsed :" + str(time.time() - starttime))
         print("PRINTED: " + str(command) + " To console")
-        ser.write(command)
+        self.ser.write(command)
 
         # If the current speed is equal to the target velocity, return 1
         if (carspeed == self.velocity):
@@ -85,7 +96,7 @@ class Actuation:
         # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
         return 0, time.time(),carspeed
 
-    def write_angle_command(self, ser, lasttime,starttime):
+    def write_angle_command(self):
         """
         This function writes a steering command to the given serial port `ser` with the specified `steeringangle` and `angularacceleration`.
 
@@ -106,19 +117,16 @@ class Actuation:
                 float: The time elapsed since the start of the function.
         """
 
-        command = f"#2:{self.steeringangle};;\r\n".encode()
+        command = f"#2:{round(self.steeringangle,5)};;\r\n".encode()
 
         print("PRINTED: " + str(command) + " To console")
 
-        ser.write(command)
+        self.ser.write(command)
 
         # If the current angle is equal to the target steering angle, return 1
-        if (steeringangle == self.steering):
-            return 1, time.time(), steeringangle
 
         # Otherwise, return 0 to indicate that the angle is still increasing or decreasing
-        return 0, time.time(), steeringangle
-    
+        return 0, time.time(),self.steeringangle
     def get_steering(self):
         return self.steering
 
