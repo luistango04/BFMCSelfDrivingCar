@@ -116,6 +116,8 @@ class Actuation:
                 float: The current angle of the steering.
                 float: The time elapsed since the start of the function.
         """
+        self.steeringangle = 1*check_angle(self.steeringangle )
+	
 
         command = f"#2:{round(self.steeringangle,5)};;\r\n".encode()
 
@@ -134,4 +136,10 @@ class Actuation:
 
     def __str__(self):
         return " Input Steering: {} | Velocity: {}".format(self.steering, self.velocity, )
-
+def check_angle(angle):
+    if angle > 23:
+        return 23
+    elif angle < -23:
+        return -23
+    else:
+        return angle

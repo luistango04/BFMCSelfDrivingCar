@@ -26,8 +26,8 @@ def init():
     # Defining variables to hold meter-to-pixel conversion
     ym_per_pix = 280 / camera_resolutiony#  ## GUESSING ITS ABOUT THIS FAR Standard lane width is 3.7 cm divided by lane width in 		pixels which is NEEDS TUNING
     # calculated to be approximately 720 pixels not to be confused with frame height
-    #xm_per_pix = 35  / camera_resolutionx
-    xm_per_pix = 16,55  / camera_resolutionx
+    #xm_per_pix = 35  # camera_resolutionx
+    xm_per_pix = 1.655 # camera_resolutionx,55 
     starttime = time.time()  ## PROGRAM START
     ## RUN THIS TO DO SET SENSOR
     pipeline = camerainit(camera_resolutionx, camera_resolutiony)
@@ -76,7 +76,7 @@ def camerainit(camera_resolutionx, camera_resolutiony):
 
     # Display the color image using OpenCV
 
-    cv2.waitKey(1)
+   
     #    config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
     # Start streaming
     pipeline.start(config)

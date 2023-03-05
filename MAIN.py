@@ -2,6 +2,7 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 import Setup
+import serial
 from Sense import SensingInput
 from unittest.mock import Mock
 from SCENE import PScene
@@ -10,9 +11,9 @@ from Brain import Brain
 from VehicleControl import vehiclecontrol
 pipeline = Setup.init()
 from Actuation import Actuation
-
-ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
-#ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
+#ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
+ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 Sense = SensingInput(ser,pipeline)
 ser.flush()
 
@@ -35,41 +36,43 @@ def test_fps(object_instance, num_frames=120):
     fps = num_frames / elapsed_time
     return fps
 
-
-test_fps(Sense, 120)
-# test the FPS of the processor object
-fps = test_fps(Sense)
-
-print(f"Estimated FPS: {fps:.2f}")
-
+time.sleep(1) # Give time to fire up camera birghtness
+print("CONSTRCT CLASS")
 Scene = PScene(Sense)
 Brain = Brain(Scene)
 vehiclecontrol = vehiclecontrol(Brain,ser,Sense)
 Actuation = Actuation(vehiclecontrol,ser)
 
 start_time = time.time()
-
+iter = 1
 try:
     while True:
+        carspeed = .3
+        command = f"#1:{carspeed};;\r\n".encode()
+    
+        print("PRINTED: " + str(command) + " To console")
+        ser.write(command)
         print("SENSING")
         Sense.senseall()
+        #cv2.imshow("TEST",Sense.colorframe)
         Scene = PScene(Sense)
 
 
-        Scene.lane_detection()
+        print(Scene.lane_detection())
         Brain.update_from_scene(Scene)
-        print(Brain)
+        #print(Brain)
         vehiclecontrol.updatefrombrainscene(Brain,Sense)
         vehiclecontrol.lanefollow()
         Actuation.update(vehiclecontrol)
         Actuation.write_angle_command()
 
         #
-       # cv2.waitKey(5000)
+        cv2.waitKey(10000)
         #Scene.lane_detection()
         # test the FPS of the processor object
-
-
+	
+        #cv2.waitKey(5000)
+        iter = iter + 1
         pass
 
 
@@ -77,10 +80,13 @@ try:
 except KeyboardInterrupt:
 		print("Keyboard interrupt detected. Exiting...")
 pipeline.stop()
+ser.flush()
+carspeed = 0 ## Stop the car
+command = f"#1:{carspeed};;\r\n".encode()
 
 end_time = time.time()
 time_taken = end_time - start_time
-iterations_per_second = 1 / time_taken
+iterations_per_second = iter / time_taken
 
 print("Iterations per second:", iterations_per_second)
 

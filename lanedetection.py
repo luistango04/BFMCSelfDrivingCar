@@ -157,8 +157,14 @@ def slide_window_search(binary_warped, histogram):
     # Apply 2nd degree polynomial fit to fit curves
 
 
-    left_fit = np.polyfit(lefty, leftx, 2)
+    if len(lefty) > 0 and len(leftx) > 0:
+     left_fit = np.polyfit(lefty, leftx, 2)
+    else:
+     left_fit = [0, 0, 0]
     right_fit = np.polyfit(righty, rightx, 2)
+
+    
+    # handle the error here (e.g. set default values for left_fit and right_fit)
 
 
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0])
@@ -200,13 +206,19 @@ def general_search(binary_warped, left_fit, right_fit):
     right_lane_inds = ((nonzerox > (right_fit[0]*(nonzeroy**2) + right_fit[1]*nonzeroy +
     right_fit[2] - margin)) & (nonzerox < (right_fit[0]*(nonzeroy**2) +
     right_fit[1]*nonzeroy + right_fit[2] + margin)))
-
+	
     leftx = nonzerox[left_lane_inds]
     lefty = nonzeroy[left_lane_inds]
     rightx = nonzerox[right_lane_inds]
     righty = nonzeroy[right_lane_inds]
-    left_fit = np.polyfit(lefty, leftx, 2)
+
+    if len(lefty) > 0 and len(leftx) > 0:
+     left_fit = np.polyfit(lefty, leftx, 2)
+    else:
+     left_fit = [0, 0, 0]
     right_fit = np.polyfit(righty, rightx, 2)
+
+    
     ploty = np.linspace(0, binary_warped.shape[0]-1, binary_warped.shape[0])
     left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
@@ -325,7 +337,7 @@ def offCenter(meanPts, inpFrame):
     # Calculating deviation in cm
     mpts = meanPts[-1][-1][-2].astype(int)
     pixelDeviation = inpFrame.shape[1] / 2 - abs(mpts)
-    deviation = pixelDeviation * xm_per_pix
+    deviation = pixelDeviation
     direction = "left" if deviation < 0 else "right"
 
     return deviation, direction

@@ -1,7 +1,8 @@
 import sys
 import Setup
+from matplotlib import pyplot as plt, cm, colors
 
-from lanedetection import processImage,plotHistogram,slide_window_search,general_search,measure_lane_curvature,draw_lane_lines
+from lanedetection import processImage,plotHistogram,slide_window_search,general_search,measure_lane_curvature,offCenter,draw_lane_lines
 #from Sign_detection_yolo import detect
 sys.path.append('.')
 
@@ -80,6 +81,9 @@ class PScene:
             imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
             imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
             histogram, leftxBase, rightxBase,midpoint = plotHistogram(thresh)
+
+
+#
             ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, histogram)
             draw_info = general_search(thresh, left_fit, right_fit)
             #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
@@ -88,12 +92,9 @@ class PScene:
             #     #
             #     # # Filling the area of detected lanes with green
             meanPts, result = draw_lane_lines(self.colorframe, thresh, minverse, draw_info)
-
-            mpts = meanPts[-1][-1][-2].astype(int)
-            pixelDeviation = self.colorframe.shape[1] / 2 - abs(mpts)
-
-            deviation = pixelDeviation * Setup.xm_per_pix
-            direction = "left" if deviation < 0 else "right"
+            deviation,direction = offCenter(meanPts,self.colorframe)
+#            deviation = -1*pixelDeviation * Setup.xm_per_pix
+#            direction = "left" if deviation < 0 else "right"
             
             #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,Setup.ym_per_pix,Setup.xm_per_pix) ## IF curavture is needed
             #meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
@@ -101,8 +102,8 @@ class PScene:
             # print(direction)
 
    
-            #cv2.imshow('birdViewR', hlsR)
-            #cv2.imshow('birdViewL', hlsL)
+            cv2.imshow('birdViewR', hlsR)
+            cv2.imshow('birdViewL', hlsL)
             #print(draw_info)
             self.deviation = deviation
             self.direction = direction
@@ -168,36 +169,37 @@ def perspectiveWarp(inpImage):
     frame = inpImage 
     # Get image size
     img_size = (inpImage.shape[1], inpImage.shape[0])
-    #print(img_size)
+    print(img_size)
     # Perspective points to be warped
     ############ update this to identify region lane of interest based on lens of camera
 	
-    c1 = ((int) (.3*camera_resolutionx),(int)(.6*camera_resolutiony)) ## TOP LEFT
-    c2 =   (0,(int) (1.0*camera_resolutiony)) ## BOTTOM LEFT
-    c2 =   (0,(int) (1.0*camera_resolutiony)) ## BOTTOM LEFT
+    c1 = ((int) (.1*camera_resolutionx),(int)(.5*camera_resolutiony)) ## TOP LEFT
 
-    c3 =  (camera_resolutionx, (int)(1.0*camera_resolutiony))   ## BOTTOM RIGHT
-    c4 =      ((int) (.7*camera_resolutionx),(int)(.6*camera_resolutiony)) #TOP RIGHT
+    c2 =   ((int) (.1*camera_resolutionx),(int) (.8*camera_resolutiony)) ## BOTTOM LEFT
+
+    c3 =  ((int) (.9*camera_resolutionx), (int)(.8*camera_resolutiony))   ## BOTTOM RIGHT
+    c4 =      ((int) (.9*camera_resolutionx),(int)(.5*camera_resolutiony)) #TOP RIGHT
     ##
 
     src = np.float32([c1,c2,c3,c4])
-
+## OVER COMPENSATE
     # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
     p1 = [0,0]## TOP LEFT
-    p2 = [0,camera_resolutiony]  ## BOTTOM LEFT
-    p3 = [camera_resolutionx,camera_resolutiony]  ## BOTTOM RIGHT
+    p2 = [(.05*camera_resolutionx),camera_resolutiony]  ## BOTTOM LEFT
+    p3 = [(.95*camera_resolutionx),camera_resolutiony]  ## BOTTOM RIGHT
     p4 = [camera_resolutionx,0]  # TOP RIGHT
     #p5 = [camera_resolutionx/2,0]  # TOP RIGHT
     dst = np.float32([p1,p2,p3,p4])
 
     # Matrix to warp the image for birdseye window
     matrix = cv2.getPerspectiveTransform(src, dst)
+
     #cv2.imshow("myetest2",matrix)
-    cv2.circle(frame,c1,5,(0,0,255),-1)
+    cv2.circle(frame,c1,                          5,(0,0,255),-1)
     cv2.circle(frame,c2,5,(0,0,255),-1)
     cv2.circle(frame,c3,5,(0,0,255),-1)
     cv2.circle(frame,c4,5,(0,0,255),-1)
-    #cv2.imshow("ROIS", frame)
+    cv2.imshow("ROIS", frame)
 
     # Inverse matrix to unwarp the image for final window
     minv = cv2.getPerspectiveTransform(dst, src)
@@ -212,7 +214,7 @@ def perspectiveWarp(inpImage):
     birdseyeRight = birdseye[0:height, width // 2:width]
 
 #     Display birdseye view image
-    #cv2.imshow("Birdseye" , birdseye)
+    cv2.imshow("Birdseye" , birdseye)
     #cv2.imshow("Birdseye Left" , birdseyeLeft)
     #cv2.imshow("Birdseye Right", birdseyeRight)
 
