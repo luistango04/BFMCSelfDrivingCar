@@ -14,7 +14,7 @@ def init():
     global camera_resolutiony
     global starttime
     starttime = time.time()
-    camera_resolutionx = 320
+    camera_resolutionx = 424
     camera_resolutiony = 240
     global xm_per_pix
     global ym_per_pix
@@ -31,36 +31,37 @@ def init():
     starttime = time.time()  ## PROGRAM START
     ## RUN THIS TO DO SET SENSOR
     pipeline = camerainit(camera_resolutionx, camera_resolutiony)
+    time.sleep(1)
     return pipeline
 
 def camerainit(camera_resolutionx, camera_resolutiony):
 
     #Part to reset/reattach camera connection through software
     #Find the device
-    dev = usb.core.find(idVendor=0x8086, idProduct=0x0b3a) #Intel D435i
-
-    #If the device is found, reset its USB connection
-    if dev is not None:
-        try:
-            #Detach the device from the kernel driver
-            if dev.is_kernel_driver_active(0):
-                dev.detach_kernel_driver(0)
-
-            #Reset the device
-            dev.reset()
-
-            #Reattach the device to the kernel driver
-            usb.util.dispose_resources(dev)
-            dev.attach_kernel_driver(0)
-
-        #If there is an error, print it
-        except usb.core.USBError as e:
-            print("USBError: {}".format(str(e)))
-
-    #If the device is not found, print an error message
-    else:
-        print("USB device not found")
-    time.sleep(2)
+    # dev = usb.core.find(idVendor=0x8086, idProduct=0x0b3a) #Intel D435i
+    #
+    # #If the device is found, reset its USB connection
+    # if dev is not None:
+    #     try:
+    #         #Detach the device from the kernel driver
+    #         if dev.is_kernel_driver_active(0):
+    #             dev.detach_kernel_driver(0)
+    #
+    #         #Reset the device
+    #         dev.reset()
+    #
+    #         #Reattach the device to the kernel driver
+    #         usb.util.dispose_resources(dev)
+    #         dev.attach_kernel_driver(0)
+    #
+    #     #If there is an error, print it
+    #     except usb.core.USBError as e:
+    #         print("USBError: {}".format(str(e)))
+    #
+    # #If the device is not found, print an error message
+    # else:
+    #     print("USB device not found")
+    #time.sleep(2)
 
 
     # Configure depth and color streams
@@ -68,7 +69,7 @@ def camerainit(camera_resolutionx, camera_resolutiony):
 
     # Configure the pipeline to stream both color, depth and motion
     config = rs.config()
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+    config.enable_stream(rs.stream.depth, camera_resolutionx, camera_resolutiony, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
     config.enable_stream(rs.stream.accel)
     config.enable_stream(rs.stream.gyro)

@@ -2,7 +2,7 @@ import sys
 import Setup
 from matplotlib import pyplot as plt, cm, colors
 
-from lanedetection import processImage,plotHistogram,slide_window_search,general_search,measure_lane_curvature,offCenter,draw_lane_lines
+from lanedetection import *
 #from Sign_detection_yolo import detect
 sys.path.append('.')
 
@@ -17,8 +17,8 @@ import time
 
 class PScene:
     def __init__(self, SensingInput = None):
-        self.camera_resolution = Setup.camera_resolutionx
-        self.camera_resolution = Setup.camera_resolutiony
+        self.camera_resolutionx = Setup.camera_resolutionx
+        self.camera_resolutiony = Setup.camera_resolutiony
 
         if(SensingInput is not None):
 
@@ -72,16 +72,105 @@ class PScene:
         ## add additional param for resolution x, resolution y
         ## in case you need it for the tensor function param
 
+    def intersectiondetection(self):
+
+
+                frameintersect = self.colorframe
+                camera_resolutionx = self.camera_resolutionx
+                camera_resolutiony = self.camera_resolutiony
+                start_time = time.time()
+
+                # Read the input image
+                bottomroi = (.9 * camera_resolutiony)
+                c1 = ((int)(.4 * camera_resolutionx), (int)(.5 * camera_resolutiony))  ## TOP LEFT
+
+                c2 = ((int)(.45 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM LEFT
+
+                c3 = ((int)(.55 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM RIGHT
+                c4 = ((int)(.6 * camera_resolutionx), (int)(.5 * camera_resolutiony))  # TOP RIGHT
+
+                ## OVER COMPENSATE
+                # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
+                p1 = [0, 0]  ## TOP LEFT
+                p2 = [(.001 * camera_resolutionx), camera_resolutiony]  ## BOTTOM LEFT
+                p3 = [(.999 * camera_resolutionx), camera_resolutiony]  ## BOTTOM RIGHT
+                p4 = [camera_resolutionx, 0]  # TOP RIGHT
+                # p5 = [camera_resolutionx/2,0]  # TOP RIGHT
+                dst = np.float32([p1, p2, p3, p4])
+                src = np.float32([c1, c2, c3, c4])
+                ############################# new test code to look for intersection lane
+                ## Step 1 Rotate Frame
+                birdView = perspectiveWarpintersect(frameintersect, src, dst, camera_resolutionx, camera_resolutiony)
+                rotated = cv2.rotate(birdView, cv2.ROTATE_90_CLOCKWISE)
+                #cv2.imshow("Rotated", rotated)
+                # cv2.waitKey(15000)
+
+                img, hls, grayscale, thresh, blur, canny = processImage(rotated)
+                hist, midpoint, highest_peak_x, average_location, highest_peak_y, revertthis, dataline = plotHistogramintersection(
+                    thresh)
+                # plt.clf()
+                # plt.plot(hist)
+                # plt.show()
+                print(highest_peak_y)
+                if (highest_peak_y > 40000):
+                    ##print xlocation and message that intersection has been found.
+                    print("intersectionfound")
+                    print("Location:" + str(highest_peak_x) + " above birds eye view need to calibrate")
+                self.intersection_trigger = True
+                return bottomroi + bottomroi
+                ## REVERT THIS IS THE LOCATION OF INTERSECTION. Just needs calibration. The rest of the qualifying
+
+                # #  THIS CODE IS FOR VISUALIZING RESULTS BETTER ON DEBUGrotatedback = cv2.line(rotated, tuple(dataline[:, 0]), tuple(dataline[:, 1]), (0, 0, 255), 3)
+
+                # rotatedback = cv2.rotate(rotatedback, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                #
+                # test = perspectiveWarpintersect(rotatedback, dst, src, camera_resolutionx, camera_resolutiony)
+                # #  THIS CODE IS FOR VISUALIZING RESULTS BETTER ON DEBUG
+                # base_img = frameintersect.copy()
+                #
+                # # Loop through all the pixels in the second image
+                # for i in range(test.shape[0]):
+                #     for j in range(test.shape[1]):
+                #         # Check if the pixel is colored (i.e., not grayscale)
+                #         if not all(test[i, j] == test[i, j][0]):
+                #             # Add the pixel to the corresponding pixel in the base image
+                #             base_img[i, j] = test[i, j]
+                #
+                # # Display the resulting image
+                # cv2.imshow('Overlay', base_img)
 
     def lane_detection(self):
         # try:
-            #cv2.imshow('TEST', self.colorframe)
-            birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.colorframe)
+            c1 = ((int)(.2 * self.camera_resolutionx), (int)(.3 *  self.camera_resolutiony))  ## TOP LEFT
+            c2 = [0, (int)(.7 *  self.camera_resolutiony)]  ## BOTTOM LEFT
+            c3 = [ self.camera_resolutionx, (int)(.7 *  self.camera_resolutiony)]  ## BOTTOM RIGHT
+            c4 = [(int)(.8 *  self.camera_resolutionx), (int)(.3 *  self.camera_resolutiony)]  # TOP RIGHT
+
+            src = np.float32([c1, c2, c3, c4])
+            ## OVER COMPENSATE
+            # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
+
+
+            ## OVER COMPENSATE
+            # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
+            p1 = [0, 0]  ## TOP LEFT
+            p2 = [(.001 * self.camera_resolutionx), self.camera_resolutiony]  ## BOTTOM LEFT
+            p3 = [(.999 * self.camera_resolutionx), self.camera_resolutiony]  ## BOTTOM RIGHT
+            p4 = [self.camera_resolutionx, 0]  # TOP RIGHT
+            # p5 = [camera_resolutionx/2,0]  # TOP RIGHT
+            dst = np.float32([p1, p2, p3, p4])
+        #cv2.imshow
+
+            birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.colorframe,src,dst,self.camera_resolutionx,self.camera_resolutiony)
+
+
+            #cv2.imshow("birdView", birdView)
             img, hls, grayscale, thresh, blur, canny = processImage(birdView)
             imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
             imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
             histogram, leftxBase, rightxBase,midpoint = plotHistogram(thresh)
-
+            #plt.plot(histogram)
+            #plt.show()
 
 #
             ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, histogram)
@@ -102,8 +191,8 @@ class PScene:
             # print(direction)
 
    
-            cv2.imshow('birdViewR', hlsR)
-            cv2.imshow('birdViewL', hlsL)
+            #cv2.imshow('birdViewR', hlsR)
+            #cv2.imshow('birdViewL', hlsL)
             #print(draw_info)
             self.deviation = deviation
             self.direction = direction
@@ -161,96 +250,14 @@ class PScene:
             0,
             self.sign_trigger,self.deviation,self.direction ,self.intersection_trigger, self.traffic_light_trigger, self.position)
 
-################################################################################
-#### START - FUNCTION TO APPLY PERSPECTIVE WARP ################################
-def perspectiveWarp(inpImage):
-    camera_resolutionx = Setup.camera_resolutionx
-    camera_resolutiony = Setup.camera_resolutiony
-    frame = inpImage 
-    # Get image size
-    img_size = (inpImage.shape[1], inpImage.shape[0])
-    print(img_size)
-    # Perspective points to be warped
-    ############ update this to identify region lane of interest based on lens of camera
-	
-    c1 = ((int) (.1*camera_resolutionx),(int)(.5*camera_resolutiony)) ## TOP LEFT
-
-    c2 =   ((int) (.1*camera_resolutionx),(int) (.8*camera_resolutiony)) ## BOTTOM LEFT
-
-    c3 =  ((int) (.9*camera_resolutionx), (int)(.8*camera_resolutiony))   ## BOTTOM RIGHT
-    c4 =      ((int) (.9*camera_resolutionx),(int)(.5*camera_resolutiony)) #TOP RIGHT
-    ##
-
-    src = np.float32([c1,c2,c3,c4])
-## OVER COMPENSATE
-    # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
-    p1 = [0,0]## TOP LEFT
-    p2 = [(.05*camera_resolutionx),camera_resolutiony]  ## BOTTOM LEFT
-    p3 = [(.95*camera_resolutionx),camera_resolutiony]  ## BOTTOM RIGHT
-    p4 = [camera_resolutionx,0]  # TOP RIGHT
-    #p5 = [camera_resolutionx/2,0]  # TOP RIGHT
-    dst = np.float32([p1,p2,p3,p4])
-
-    # Matrix to warp the image for birdseye window
-    matrix = cv2.getPerspectiveTransform(src, dst)
-
-    #cv2.imshow("myetest2",matrix)
-    cv2.circle(frame,c1,                          5,(0,0,255),-1)
-    cv2.circle(frame,c2,5,(0,0,255),-1)
-    cv2.circle(frame,c3,5,(0,0,255),-1)
-    cv2.circle(frame,c4,5,(0,0,255),-1)
-    cv2.imshow("ROIS", frame)
-
-    # Inverse matrix to unwarp the image for final window
-    minv = cv2.getPerspectiveTransform(dst, src)
-    birdseye = cv2.warpPerspective(inpImage, matrix, img_size)
-
-    # Get the birds
-    # eye window dimensions
-    height, width = birdseye.shape[:2]
-
-    # Divide the birdseye view into 2 halves to separate left & right lanes
-    birdseyeLeft  = birdseye[0:height, 0:width // 2]
-    birdseyeRight = birdseye[0:height, width // 2:width]
-
-#     Display birdseye view image
-    cv2.imshow("Birdseye" , birdseye)
-    #cv2.imshow("Birdseye Left" , birdseyeLeft)
-    #cv2.imshow("Birdseye Right", birdseyeRight)
-
-    return birdseye, birdseyeLeft, birdseyeRight, minv
-#### END - FUNCTION TO APPLY PERSPECTIVE WARP ##################################
-################################################################################
-
-
-# import time
+# ################################################################################
+# #### START - FUNCTION TO APPLY PERSPECTIVE WARP ################################
 #
-# Scene = PScene()
+# pipeline = Setup.init()
 #
-# start_time = time.time()
+# Sense = SensingInput(ser,pipeline)
 #
-# # Read the input image
+# # Create a config and configure the pipeline to stream from the bag file
 #
-# #
-# # # Display the loaded image
-# # #cv2.imshow('image', frame)
-# #
-# print(Scene.lanenode())
-# print(Scene)
 #
-# #
-# # #cv2.imshow('birdView', img)
-# #
-# # cv2.waitKey(0)
-# # cv2.destroyAllWindows()
-# start_time = time.time()  # Start timer
-# num_iterations = 1000   # Replace with the actual number of iterations in your loop
-#
-# # Loop code goes here
-# for i in range(num_iterations):
-#     Scene.lanenode()
-#
-# end_time = time.time()  # Stop timer
-# iterations_per_sec = num_iterations / (end_time - start_time)
-#
-# print(f"Iterations per second: {iterations_per_sec:.2f}")
+# time.sleep(2)

@@ -7,19 +7,43 @@
 ################################################################################
 
 
-# IMPORT NECESSARY LIBRARIES
-import Setup
+import pyrosbag as pb
+
+
+
+
+
 import cv2
 import numpy as np
 import os
 from scipy import optimize
 from matplotlib import pyplot as plt, cm, colors
 
+camera_resolutionx = 424
+camera_resolutiony = 240
 
 
 # Get path to the current working directory
 CWD_PATH = os.getcwd()
+def getpipelinefrombagfile():
+    parser = argparse.ArgumentParser(description='Convert RealSense bag file to stream.')
+    parser.add_argument('--input', type=str, required=True, help='input bag file')
+    parser.add_argument('--output', type=str, required=True, help='output stream file')
+    args = parser.parse_args()
 
+    # Open the bag file for reading
+    bag = rsrec.realsense_bag(args.input)
+
+    # Create a pipeline
+    pipeline = rs.pipeline()
+
+    # Create a config and configure the pipeline to stream from the bag file
+    config = rs.config()
+    config.enable_device_from_file(args.input)
+
+    # Start the pipeline and get the first frame
+    pipeline.start(config)
+    return pipeline
 ############################################################################
 #### START - FUNCTION TO APPLY PERSPECTIVE WARP ################################
 
@@ -35,6 +59,159 @@ CWD_PATH = os.getcwd()
 #out = cv2.VideoWriter('output.avi', fourcc, 20.0, (xresolution, yresolution))
 ################################################################################
 #### START - FUNCTION TO READ AN INPUT IMAGE ###################################
+
+
+
+def plotHistogramintersection(inpImage):
+
+    histogram = np.sum(inpImage[inpImage.shape[0] // 2:, :], axis = 0)
+
+    midpoint = np.int64(histogram.shape[0] / 2)
+    x = np.arange(0, histogram.shape[0], 1)
+    plt.xlabel("Image X Coordinates")
+    plt.ylabel("Number of White Pixels")
+    highest_peak_idx = np.argmax(histogram)
+    highest_peak_x = x[highest_peak_idx]
+
+    # Assuming the y-axis values are stored in the variable 'y'
+    # Get the y-value at the highest peak index
+    highest_peak_y = histogram[highest_peak_idx]
+
+    revertthis =  plt.axvline(x=highest_peak_idx, color='r')
+
+    #get the numpypoints from the plot
+    dataline = revertthis.get_data()
+    dataline = np.round(dataline).astype(int)
+    dataline = np.round(dataline).astype(int)
+
+    # Get the average location of the highest peak
+    average_location = (highest_peak_x + highest_peak_y) / 2
+    # Return histogram and x-coordinates of left & right lanes to calculate
+    # lane width in pixels
+   # plt.show()
+
+    return histogram,  midpoint,highest_peak_x, average_location,highest_peak_y,revertthis,dataline
+#### END - FUNCTION TO PLOT THE HISTOGRAM OF WARPED IMAGE ######################
+################################################################################
+
+
+def perspectiveWarpintersect(inpImage,src,dst,camera_resolutionx,camera_resolutiony):
+
+    print(type(inpImage))
+    # Get image size
+#    img_size = (inpImage.shape[1], inpImage.shape[0])
+ #   print(type(img_size))
+    # Perspective points to be warped
+    ############ update this to identify region lane of interest based on lens of camera
+
+
+
+
+
+    # Matrix to warp the image for birdseye window
+    matrix = cv2.getPerspectiveTransform(src, dst)
+
+    # cv2.imshow("myetest2",matrix)
+    # cv2.circle(frame, c1, 5, (0, 0, 255), -1)
+    # cv2.circle(frame, c2, 5, (0, 0, 255), -1)
+    # cv2.circle(frame, c3, 5, (0, 0, 255), -1)
+    # cv2.circle(frame, c4, 5, (0, 0, 255), -1)
+    #cv2.imshow("ROIS", frame)
+
+    # Inverse matrix to unwarp the image for final window
+    minv = cv2.getPerspectiveTransform(dst, src)
+    birdseye = cv2.warpPerspective(inpImage, matrix, (camera_resolutionx,camera_resolutiony))
+
+    # Get the birds
+    # eye window dimensions
+
+    return birdseye
+
+def perspectiveWarp(inpImage,src,dst,camera_resolutionx,camera_resolutiony):
+
+    frame = inpImage
+    # Get image size
+    img_size = (inpImage.shape[1], inpImage.shape[0])
+    print(img_size)
+    # Perspective points to be warped
+    ############ update this to identify region lane of interest based on lens of camera
+
+
+
+
+    # Matrix to warp the image for birdseye window
+    matrix = cv2.getPerspectiveTransform(src, dst)
+
+    # cv2.imshow("myetest2",matrix)
+    # cv2.circle(frame, c1, 5, (0, 0, 255), -1)
+    # cv2.circle(frame, c2, 5, (0, 0, 255), -1)
+    # cv2.circle(frame, c3, 5, (0, 0, 255), -1)
+    # cv2.circle(frame, c4, 5, (0, 0, 255), -1)
+    #cv2.imshow("ROIS", frame)
+
+    # Inverse matrix to unwarp the image for final window
+    minv = cv2.getPerspectiveTransform(dst, src)
+    birdseye = cv2.warpPerspective(inpImage, matrix, img_size)
+
+    # Get the birds
+    # eye window dimensions
+    height, width = birdseye.shape[:2]
+
+    # Divide the birdseye view into 2 halves to separate left & right lanes
+    birdseyeLeft = birdseye[0:height, 0:width // 2]
+    birdseyeRight = birdseye[0:height, width // 2:width]
+
+    #     Display birdseye view image
+
+    # cv2.imshow("Birdseye Left" , birdseyeLeft)
+    # cv2.imshow("Birdseye Right", birdseyeRight)
+
+    return birdseye, birdseyeLeft, birdseyeRight, minv
+#### END - FUNCTION TO APPLY PERSPECTIVE WARP ##################################
+################################################################################
+
+
+# import time
+#
+# Scene = PScene()
+#
+# start_time = time.time()
+#
+# # Read the input image
+#
+# #
+# # # Display the loaded image
+# # #cv2.imshow('image', frame)
+# #
+# print(Scene.lanenode())
+# print(Scene)
+#
+# #
+# # #cv2.imshow('birdView', img)
+# #
+# # cv2.waitKey(0)
+# # cv2.destroyAllWindows()
+# start_time = time.time()  # Start timer
+# num_iterations = 1000   # Replace with the actual number of iterations in your loop
+#
+# # Loop code goes here
+# for i in range(num_iterations):
+#     Scene.lanenode()
+#
+# end_time = time.time()  # Stop timer
+# iterations_per_sec = num_iterations / (end_time - start_time)
+#
+# print(f"Iterations per second: {iterations_per_sec:.2f}")
+
+
+
+
+
+
+
+
+
+
 def readVideo():
 
     # Read input video from current working directory
@@ -93,6 +270,7 @@ def plotHistogram(inpImage):
 
     # Return histogram and x-coordinates of left & right lanes to calculate
     # lane width in pixels
+
     return histogram, leftxBase, rightxBase,midpoint
 #### END - FUNCTION TO PLOT THE HISTOGRAM OF WARPED IMAGE ######################
 ################################################################################
@@ -173,15 +351,15 @@ def slide_window_search(binary_warped, histogram):
 
     ltx = np.trunc(left_fitx)
     rtx = np.trunc(right_fitx)
-    plt.plot(right_fitx)
+    #plt.plot(right_fitx)
 
 
     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
     out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
-    plt.imshow(out_img)
-    plt.plot(left_fitx,  ploty, color = 'yellow')
-    plt.plot(right_fitx, ploty, color = 'yellow')
+    plt.imshow(out_img,extent=[0, 424, 0, 240])
+    #plt.plot(left_fitx,  ploty, color = 'yellow')
+    #plt.plot(right_fitx, ploty, color = 'yellow')
     plt.xlim(0, 1280)
     plt.ylim(720, 0)
 
@@ -243,11 +421,12 @@ def general_search(binary_warped, left_fit, right_fit):
     cv2.fillPoly(window_img, np.int_([right_line_pts]), (0, 255, 0))
     result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
 
-    # plt.imshow(result)
-    plt.plot(left_fitx,  ploty, color = 'yellow')
-    plt.plot(right_fitx, ploty, color = 'yellow')
+
+    # plt.plot(left_fitx,  ploty, color = 'yellow')
+    # plt.plot(right_fitx, ploty, color = 'yellow')
     plt.xlim(0, 1280)
     plt.ylim(720, 0)
+
 
     ret = {}
     ret['leftx'] = leftx
@@ -315,6 +494,15 @@ def draw_lane_lines(original_image, warped_image, Minv, draw_info):
 
     mean_x = np.mean((left_fitx, right_fitx), axis=0)
     pts_mean = np.array([np.flipud(np.transpose(np.vstack([mean_x, ploty])))])
+    x_coords = pts_mean[:, :, 0].flatten()
+    y_coords = pts_mean[:, :, 1].flatten()
+
+
+    # Plot the x and y coordinates
+    plt.plot(x_coords, y_coords)
+
+    # Show the plot
+
 
     cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
     cv2.fillPoly(color_warp, np.int_([pts_mean]), (0, 255, 255))
@@ -336,6 +524,7 @@ def offCenter(meanPts, inpFrame):
 
     # Calculating deviation in cm
     mpts = meanPts[-1][-1][-2].astype(int)
+    print(mpts)
     pixelDeviation = inpFrame.shape[1] / 2 - abs(mpts)
     deviation = pixelDeviation
     direction = "left" if deviation < 0 else "right"
@@ -389,127 +578,225 @@ def addText(img, radius, direction, deviation, devDirection):
 ################################################################################
 ######## START - MAIN FUNCTION #################################################
 ################################################################################
-# import time
+import time
+from unittest.mock import Mock
+import pyrealsense2 as rs
+import Setup
+import argparse
+import Sense
+ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
+#ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+
+pipeline = Setup.init()
+
+Sense = Sense.SensingInput(ser,pipeline)
+
+# Create a config and configure the pipeline to stream from the bag file
 #
-# start_time = time.time()
 #
-# # Read the input image
-# frame = cv2.imread('Testpic.png')
-#
-# # Display the loaded image
-# cv2.imshow('image', frame)
-#
-# #######################################
-# #### START - LOOP TO PLAY THE INPUT IMAGE ######################################
+# time.sleep(2)
 #
 # try:
+#     while True:
+#         Sense.senseall()
+#         # Write the current frame to the stream file
+#
+#         frameintersect = Sense.get_COLORFRAME()
+#
+#         start_time = time.time()
+#
+#         # Read the input image
 #
 #
 #
-#     ##FRAME IS CV2 IMage
+#         c1 = ((int)(.4 * camera_resolutionx), (int)(.5 * camera_resolutiony))  ## TOP LEFT
+#
+#         c2 = ((int)(.45* camera_resolutionx), (int)(.9 * camera_resolutiony))  ## BOTTOM LEFT
+#
+#         c3 = ((int)(.55 * camera_resolutionx), (int)(.9 * camera_resolutiony))  ## BOTTOM RIGHT
+#         c4 = ((int)(.6 * camera_resolutionx), (int)(.5 * camera_resolutiony))  # TOP RIGHT
+#
+#         ## OVER COMPENSATE
+#         # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
+#         p1 = [0, 0]  ## TOP LEFT
+#         p2 = [(.001 * camera_resolutionx), camera_resolutiony]  ## BOTTOM LEFT
+#         p3 = [(.999 * camera_resolutionx), camera_resolutiony]  ## BOTTOM RIGHT
+#         p4 = [camera_resolutionx, 0]  # TOP RIGHT
+#         # p5 = [camera_resolutionx/2,0]  # TOP RIGHT
+#         dst = np.float32([p1, p2, p3, p4])
+#         src = np.float32([c1, c2, c3, c4])
+#         ############################# new test code to look for intersection lane
+#         ## Step 1 Rotate Frame
+#         birdView = perspectiveWarpintersect(frameintersect,src,dst,camera_resolutionx,camera_resolutiony)
+#         rotated = cv2.rotate(birdView, cv2.ROTATE_90_CLOCKWISE)
+#         cv2.imshow("Rotated", rotated)
+#         cv2.waitKey(15000)
+#
+#         img, hls, grayscale, thresh, blur, canny = processImage(rotated)
+#         hist, midpoint,highest_peak_x, average_location,highest_peak_y,revertthis,dataline = plotHistogramintersection(thresh)
+#         if(average_location > 20000):
+#             ##print xlocation and message that intersection has been found.
+#             print("intersectionfound")
+#             print("Location:" + str(highest_peak_x) + " above birds eye view need to calibrate")
+#         ## REVERT THIS IS THE LOCATION OF INTERSECTION. Just needs calibration. The rest of the qualifying
 #
 #
-#     # Apply perspective warping by calling the "perspectiveWarp()" function
-#     # Then assign it to the variable called (birdView)
-#     # Provide this function with:
-#     # 1- an image to apply perspective warping (frame)
-#     birdView, birdViewL, birdViewR, minverse = perspectiveWarp(frame)
 #
 #
-#     # Apply image processing by calling the "processImage()" function
-#     # Then assign their respective variables (img, hls, grayscale, thresh, blur, canny)
-#     # Provide this function with:
-#     # 1- an already perspective warped image to process (birdView)
-#     img, hls, grayscale, thresh, blur, canny = processImage(birdView)
-#     imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
-#     imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
+#         rotatedback = cv2.line(rotated, tuple(dataline[:, 0]), tuple(dataline[:, 1]), (0, 0, 255),3)
+#         rotatedback = cv2.rotate(rotatedback, cv2.ROTATE_90_COUNTERCLOCKWISE)
 #
-#     # Plot and display the histogram by calling the "get_histogram()" function
-#     # Provide this function with:
-#     # 1- an image to calculate histogram on (thresh)
-#     hist, leftBase, rightBase = plotHistogram(thresh)
-#     # # print(rightBase - leftBase)
-#     #plt.plot(hist)
 #
-#     #plt.show()
 #
-#     #
+#         test = perspectiveWarpintersect(rotatedback,dst,src,camera_resolutionx,camera_resolutiony)
 #
-#     #(frame)
-#     ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, hist)
-#     plt.plot(left_fit)
-#     #plt.show()
-#     #
-#     #
-#     draw_info = general_search(thresh, left_fit, right_fit)
-#     #plt.show()
-#     #
-#     #
 #
-#     curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
-#     #
-#     #
-#     # # Filling the area of detected lanes with green
-#     meanPts, result = draw_lane_lines(frame, thresh, minverse, draw_info)
-#     #
-#     #
-#     deviation, directionDev = offCenter(meanPts, frame)
-#     #
-#     #
-#     # # Adding text to our final image
-#     finalImg = addText(result, curveRad, curveDir, deviation, directionDev)
-#     #
-#     # # Displaying final image
-#     cv2.imshow("Final", finalImg)
+#         base_img = frameintersect.copy()
+#
+#         # Loop through all the pixels in the second image
+#         for i in range(test.shape[0]):
+#             for j in range(test.shape[1]):
+#                 # Check if the pixel is colored (i.e., not grayscale)
+#                 if not all(test[i,j] == test[i,j][0]):
+#                     # Add the pixel to the corresponding pixel in the base image
+#                     base_img[i,j] = test[i,j]
+#
+#         # Display the resulting image
+#         cv2.imshow('Overlay', base_img)
+#
+
+
+
+        ##plot vertical line
+
+
+
+        #cv2.line(img, (250, 0), (250, 499), (255, 0, 0), thickness=2)
+
+
+
+        # plt.plot(hist)
+        #
+        # plt.show()
+        # intersectionloc = highest_peak_x
+        #
+        # text = f"Intersection: ({intersectionloc})"
+        # print(text)
+        #
+        #
+        #
+        # cv2.imshow("Original", frameintersect)
+        # # Show original and rotated images
+        # #cv2.imshow("Original2", birdView)
+        #
+        # cv2.imshow("Returntonormal", base_img)
+        # cv2.waitKey(15000)
+        #
+        #
+
+
+
+
+        # cv2.destroyAllWindows()
+# except KeyboardInterrupt:
+#     pass
+#
+#
+#
+# ################################################################################
+######## END - MAIN FUNCTION ###################################################
+################################################################################
+
+
+
+#
+#
+#
+
+## Intersection function . Rotate image look for general search
+# Display the loaded image
+#cv2.imshow('image', frame)
+
+#######################################
+#### START - LOOP TO PLAY THE INPUT IMAGE ######################################
+
+#try:
+
+
+##
+
+
+# ##FRAME IS CV2 IMage
+#
+#
+# # Apply perspective warping by calling the "perspectiveWarp()" function
+# # Then assign it to the variable called (birdView)
+# # Provide this function with:
+# # 1- an image to apply perspective warping (frame)
+# birdView, birdViewL, birdViewR, minverse = perspectiveWarp(frame,c1,c2,c3,c4,camera_resolutionx,camera_resolutiony)
+#
+#
+# # Apply image processing by calling the "processImage()" function
+# # Then assign their respective variables (img, hls, grayscale, thresh, blur, canny)
+# # Provide this function with:
+# # 1- an already perspective warped image to process (birdView)
+# img, hls, grayscale, thresh, blur, canny = processImage(birdView)
+# imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
+# imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
+#
+# # Plot and display the histogram by calling the "get_histogram()" function
+# # Provide this function with:
+# # 1- an image to calculate histogram on (thresh)
+# hist, leftBase, rightBase,midpoint = plotHistogram(thresh)
+# # # print(rightBase - leftBase)
+# #plt.plot(hist)
+#
+# #plt.show()
+#
+# #
+#
+# #(frame)
+# ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, hist)
+# plt.plot(left_fit)
+# #plt.show()
+# #
+# #
+# draw_info = general_search(thresh, left_fit, right_fit)
+# #plt.show()
+# #
+# #
+#
+# curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,17,33)
+# #
+# #
+# # # Filling the area of detected lanes with green
+# meanPts, result = draw_lane_lines(frame, thresh, minverse, draw_info)
+# #
+# #
+# deviation, directionDev = offCenter(meanPts, frame)
+# print(deviation)
+# #
+# #
+# # # Adding text to our final image
+# finalImg = addText(result, curveRad, curveDir, deviation, directionDev)
+# plt.show()
+# #
+# # # Displaying final image
+# cv2.imshow("Final", finalImg)
 # #      out.write(finalImg)
-#     #
-#
-#     # Wait for the ENTER key to be pressed to stop playback
-#
-# except Exception as e:
-#     elapsed_time = time.time() - start_time
-#     print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
-#     print("Error message:", e)
-#
-# #### END - LOOP TO PLAY THE INPUT IMAGE ########################################
-# ################################################################################
-#
-# # Cleanup
-# #out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (xresolution,yresolution))
-#
-#
-# cv2.destroyAllWindows()
-#
-# ################################################################################
-# ######## END - MAIN FUNCTION ###################################################
-# ################################################################################
-#
-#
-#
-#
-#
+# #
 #
 
+# Wait for the ENTER key to be pressed to stop playback
 
+#except Exception as e:
+# elapsed_time = time.time() - start_time
+# print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
+# print("Error message:", e)
 
+#### END - LOOP TO PLAY THE INPUT IMAGE ########################################
+################################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Cleanup
+#out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (xresolution,yresolution))
+## intersection ROI

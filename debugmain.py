@@ -56,7 +56,8 @@ try:
         Scene = PScene(Sense)
 
 
-        Scene.lane_detection()
+        print(Scene.lane_detection())
+        print(Scene.intersectiondetection())
         Brain.update_from_scene(Scene)
         print(Brain)
         vehiclecontrol.updatefrombrainscene(Brain,Sense)
@@ -69,7 +70,7 @@ try:
         #Scene.lane_detection()
         # test the FPS of the processor object
 
-
+        time.sleep(2)
         pass
 
 
