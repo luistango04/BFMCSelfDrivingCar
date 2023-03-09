@@ -19,20 +19,18 @@ pip3 install requests
 sudo nvpmodel -m 0
 sudo jetson_clocks
 
-You need internet connection for the first time to download the trained data. 
-Install the inference server
+#You need internet connection for the first time to download the trained data. 
+#Install the inference server
 
 sudo docker pull roboflow/inference-server:jetson
 
-Run the infernce server
+#Run the infernce server
 sudo docker run --net=host --gpus all roboflow/inference-server:jetson
 
-Run the code with intel realsense or without
+#Run the code with intel realsense or without
 
 python3 infer_local_with_realsense.py
 
-OR 
+#OR 
 
 python3 infer_local_without_realsense.py
-
-
