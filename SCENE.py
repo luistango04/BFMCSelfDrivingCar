@@ -40,9 +40,13 @@ class PScene:
         self.position = 0
         self.deviation = 0
         self.direction= 0
-        self.traffic = False
-        self.pedestrianyield = False
-        self.stopsign = False
+        self.traffic_light_object_trigger = False
+        self.crossing_trigger = False
+        self.stop_trigger = False
+	self.parking_trigger = False
+	self.priority_trigger = False
+	
+	
 
 
 
@@ -69,6 +73,33 @@ class PScene:
             scale = ROBOFLOW_SIZE / max(camera_resolutiony, camera_resolutionx)  ##
             img = cv2.resize(color_image, (round(scale * camera_resolutionx), round(scale * camera_resolutiony)))
             self.signs(infer(img))
+	    sign_index_matrix = infer(img)
+	    # update Boolean variables based on the classes that are required right now.
+		
+	    if 0 in sign_index_matrix:
+		crossing_trigger = True
+	    else:
+		crossing_trigger = False
+		
+	    if 5 in sign_index_matrix:
+		parking_trigger = True
+	    else:
+		parking_trigger = False
+		
+	    if 6 in sign_index_matrix:
+		priority_trigger = True
+	    else:
+		priority_trigger = False
+		
+	    if 7 in sign_index_matrix:
+		stop_trigger = True
+	    else:
+		stop_trigger = False
+		
+	    if 8 in sign_index_matrix:
+		traffic_light_object_trigger = True
+	    else:
+		traffic_light_object_trigger = False
 		
 		 ## traffic sign? 8
 		 ## traffic stop sign 7
