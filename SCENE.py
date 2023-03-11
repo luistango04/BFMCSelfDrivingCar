@@ -3,7 +3,7 @@ import Setup
 from matplotlib import pyplot as plt, cm, colors
 
 from lanedetection import *
-#from Sign_detection_yolo import detect
+from sign_detection_roboflow_rs import *
 sys.path.append('.')
 
 import cv2
@@ -210,6 +210,10 @@ class PScene:
             elapsed_time = time.time() - Setup.starttime
             print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
             print("Error message:", e)
+
+    def sign_detection(self):
+        sign_index_matrix = infer()
+        return sign_index_matrix
 
 
 
