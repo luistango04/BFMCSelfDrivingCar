@@ -33,7 +33,7 @@ def test_fps(object_instance, num_frames=120):
     elapsed_time = end_time - start_time
     fps = num_frames / elapsed_time
     return fps
-
+#
 time.sleep(1) # Give time to fire up camera birghtness
 print("CONSTRCT CLASS")
 Scene = PScene(Sense)
