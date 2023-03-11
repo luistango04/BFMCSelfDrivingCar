@@ -42,8 +42,11 @@ class PScene:
         self.direction= 0
 
 	
-
-    def runobjectdetection(self,frame):
+    def makeascene(self):
+        self.runobjectdetection()
+        self.intersectiondetection()
+        self.lane_detection()
+    def runobjectdetection(self):
 
 
 
@@ -68,7 +71,7 @@ class PScene:
         # # Matrix to warp the image for birdseye window
         # matrix = cv2.getPerspectiveTransform(src, dst)
         #RUN HISTORGRAM LANEDTECTION ON MATRX
-        run(matrix,resolutionx,resolutiony)
+        return 0
         ## add additional param for resolution x, resolution y
         ## in case you need it for the tensor function param
 

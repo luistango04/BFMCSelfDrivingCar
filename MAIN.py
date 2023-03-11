@@ -1,8 +1,5 @@
-import pyrealsense2 as rs
-import numpy as np
-import cv2
+
 import Setup
-import serial
 from Sense import SensingInput
 from unittest.mock import Mock
 from SCENE import PScene
@@ -10,10 +7,11 @@ import time
 from Brain import Brain
 from VehicleControl import vehiclecontrol
 pipeline = Setup.init()
-from Actuation import Actuation
+import Actuation
+from Actuation import vehiclefree
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
-#ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
-ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
+#ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 Sense = SensingInput(ser,pipeline)
 ser.flush()
 
@@ -41,7 +39,7 @@ print("CONSTRCT CLASS")
 Scene = PScene(Sense)
 Brain = Brain(Scene)
 vehiclecontrol = vehiclecontrol(Brain,ser,Sense)
-Actuation = Actuation(vehiclecontrol,ser)
+Actuation = Actuation.Actuation(vehiclecontrol,ser)
 
 start_time = time.time()
 iter = 1
@@ -50,24 +48,31 @@ try:
         carspeed = .3
         command = f"#1:{carspeed};;\r\n".encode()
     
-        print("PRINTED: " + str(command) + " To console")
+        #print("PRINTED: " + str(command) + " To console")
         ser.write(command)
         print("SENSING")
         Sense.senseall()
         #cv2.imshow("TEST",Sense.colorframe)
         Scene = PScene(Sense)
+        Scene.makeascene()
+        time.sleep(1)
+        Brain.update(Scene)
+        Brain.perform_action() ## THINK
+
+        print(Brain)
+        print()
+        #time.sleep(2)
+        if (not(vehiclefree) and Brain.emergency == False):
+            pass
+        else:
+
+            vehiclecontrol.updatefrombrainscene(Brain, Sense)
+            Actuation.update(vehiclecontrol)
 
 
-        print(Scene.lane_detection())
-        Brain.update_from_scene(Scene)
-        #print(Brain)
-        vehiclecontrol.updatefrombrainscene(Brain,Sense)
-        vehiclecontrol.lanefollow()
-        Actuation.update(vehiclecontrol)
-        Actuation.write_angle_command()
 
         #
-        cv2.waitKey(10000)
+     #   cv2.waitKey(10000)
         #Scene.lane_detection()
         # test the FPS of the processor object
 	
