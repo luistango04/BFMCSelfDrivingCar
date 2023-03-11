@@ -66,9 +66,9 @@ def infer():
     classes = get_prediction_classes(resp)
     return classes
 
-
+"""
 while 1:
     # Synchronously get a prediction from the Roboflow Infer API
     infer()
-
+"""
 
