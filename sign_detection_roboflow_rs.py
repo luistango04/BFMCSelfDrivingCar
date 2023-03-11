@@ -12,6 +12,11 @@ import time
 import json
 
 # Construct the Roboflow Infer URL
+ROBOFLOW_API_KEY = "ABeUmL5hsdoyPceix50P"
+ROBOFLOW_MODEL = "tes_1/1"
+ROBOFLOW_SIZE = 416
+
+
 
 upload_url = "".join([
     "http://127.0.0.1:9001/",
@@ -21,10 +26,6 @@ upload_url = "".join([
 
     "&stroke=5"
 ])
-
-ROBOFLOW_API_KEY = "ABeUmL5hsdoyPceix50P"
-ROBOFLOW_MODEL = "tes_1/1"
-ROBOFLOW_SIZE = 416
 
 
 
@@ -45,6 +46,7 @@ def get_prediction_classes(http_response):
 
 def infer(img):
     # Encode image to base64 string
+    print("DOES THIS ACTUALLY WORK??")
     retval, buffer = cv2.imencode('.jpg', img) ###
     img_str = base64.b64encode(buffer)
 
@@ -53,6 +55,8 @@ def infer(img):
         "Content-Type": "application/x-www-form-urlencoded"
     }, stream=True).raw
     classes = get_prediction_classes(resp)
+    print(type(classes))
+
     return classes
 
 """

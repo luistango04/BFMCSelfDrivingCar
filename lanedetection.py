@@ -584,12 +584,12 @@ import pyrealsense2 as rs
 import Setup
 import argparse
 import Sense
-ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
+#ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
 #ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 
-pipeline = Setup.init()
+#pipeline = Setup.init()
 
-Sense = Sense.SensingInput(ser,pipeline)
+#Sense = Sense.SensingInput(ser,pipeline)
 
 # Create a config and configure the pipeline to stream from the bag file
 #

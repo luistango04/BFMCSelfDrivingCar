@@ -8,11 +8,12 @@ from SCENE import PScene
 import time
 from Brain import Brain
 from VehicleControl import vehiclecontrol
-pipeline = Setup.init()
+
 from Actuation import Actuation
 
 ser = Mock() ## SET THIS TO SERIAL FOR LIVE!
 #ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+pipeline = Setup.init(ser)
 Sense = SensingInput(ser,pipeline)
 ser.flush()
 
@@ -44,33 +45,36 @@ print(f"Estimated FPS: {fps:.2f}")
 
 Scene = PScene(Sense)
 Brain = Brain(Scene)
-vehiclecontrol = vehiclecontrol(Brain,ser,Sense)
-Actuation = Actuation(vehiclecontrol,ser)
+#vehiclecontrol = vehiclecontrol(Brain,ser,Sense)
+#Actuation = Actuation(vehiclecontrol,ser)
 
 start_time = time.time()
 
 try:
     while True:
         print("SENSING")
-        Sense.senseall()
+        #Sense.senseall()
         Scene = PScene(Sense)
+        cv2.imshow('test',Scene.colorframe)	
+    	
+        Scene.runobjectdetection()
+        cv2.waitKey(5000)
 
-
-        print(Scene.lane_detection())
-        print(Scene.intersectiondetection())
-        Brain.update_from_scene(Scene)
-        print(Brain)
-        vehiclecontrol.updatefrombrainscene(Brain,Sense)
-        vehiclecontrol.lanefollow()
-        Actuation.update(vehiclecontrol)
-        Actuation.write_angle_command()
+        #print(Scene.lane_detection())
+        #print(Scene.intersectiondetection())
+        #Brain.update_from_scene(Scene)
+        #print(Brain)
+        #vehiclecontrol.updatefrombrainscene(Brain,Sense)
+        #vehiclecontrol.lanefollow()
+        #Actuation.update(vehiclecontrol)
+        #Actuation.write_angle_command()
 
         #
-       # cv2.waitKey(5000)
+        
         #Scene.lane_detection()
         # test the FPS of the processor object
 
-        time.sleep(2)
+        #time.sleep(2)
         pass
 
 

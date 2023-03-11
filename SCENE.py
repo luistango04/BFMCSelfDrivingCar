@@ -40,10 +40,16 @@ class PScene:
         self.position = 0
         self.deviation = 0
         self.direction= 0
+        self.traffic = False
+        self.pedestrianyield = False
+        self.stopsign = False
+
+
 
 	
     def makeascene(self):
         try:
+            self.runobjectdetection()
             self.intersectiondetection()
             self.lane_detection()
         except:
@@ -60,37 +66,21 @@ class PScene:
             # # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
             # height, width, channels = color_image.shape
             color_image  = self.colorframe
-                scale = ROBOFLOW_SIZE / max(height, width)  ##
+            scale = ROBOFLOW_SIZE / max(camera_resolutiony, camera_resolutionx)  ##
             img = cv2.resize(color_image, (round(scale * camera_resolutionx), round(scale * camera_resolutiony)))
-            infer(img)
+            self.signs(infer(img))
+		
+		 ## traffic sign? 8
+		 ## traffic stop sign 7
+                 ## pedestrian cross 0 
+                 ## parking 5
+                 ## priority 6
+ 
+
             return 1
 
 
 
-        ## NEED THIS TO RUN
-        ## do something to make   SensingInput.colorframe look liek the region of interest .
-        # c1 = ((int)(.2 * camera_resolutionx), (int)(.3 * camera_resolutiony))  ## TOP LEFT
-        # c2 = [0, (int)(.7 * camera_resolutiony)]  ## BOTTOM LEFT
-        # c3 = [camera_resolutionx, (int)(.7 * camera_resolutiony)]  ## BOTTOM RIGHT
-        # c4 = [(int)(.8 * camera_resolutionx), (int)(.3 * camera_resolutiony)]  # TOP RIGHT
-        # ##
-        #
-        # src = np.float32([c1, c2, c3, c4])
-        #
-        # # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
-        # p1 = [0, 0]  ## TOP LEFT
-        # p2 = [0, .7* camera_resolutiony]  ## BOTTOM LEFT
-        # p3 = [.8*resoltuion, .7*camera_resolutiony]  ## BOTTOM RIGHT
-        # p4 = [.8* camera_resolutionx, 0]  # TOP RIGHT
-        #
-        # dst = np.float32([p1, p2, p3, p4])
-        #
-        # # Matrix to warp the image for birdseye window
-        # matrix = cv2.getPerspectiveTransform(src, dst)
-        #RUN HISTORGRAM LANEDTECTION ON MATRX
-        return 0
-        ## add additional param for resolution x, resolution y
-        ## in case you need it for the tensor function param
 
 
     def intersectiondetection(self):
@@ -229,9 +219,6 @@ class PScene:
             print("Error occurred at time: {:.2f} seconds".format(elapsed_time))
             print("Error message:", e)
 
-    def sign_detection(self):
-        sign_index_matrix = infer()
-        return sign_index_matrix
 
 
 
