@@ -29,7 +29,7 @@ global vehiclefree
 vehiclefree = True
 
 # Define a function to perform the serial write operation
-def perform_serial_write(command, delay,listitem, ser):
+def perform_steering_write(command, delay,listitem, ser):
     # Wait for the specified delay
     if(not(listitem)):
         vehiclefree = True
@@ -41,6 +41,20 @@ def perform_serial_write(command, delay,listitem, ser):
     time.sleep(delay)
     # Perform serial write comman
     command = f"#2:{round(command+steeringadjustment, 5)};;\r\n".encode()
+
+    ser.write(command)
+def perform_drive_write(command, delay,listitem, ser):
+    # Wait for the specified delay
+    if(not(listitem)):
+        vehiclefree = True
+
+    else:
+        vehiclefree = False
+
+    command = f"#1:{carspeed};;\r\n".encode()
+    time.sleep(delay)
+    # Perform serial write comman
+    command = f"#1:{round(command+steeringadjustment, 5)};;\r\n".encode()
 
     ser.write(command)
 
@@ -69,12 +83,12 @@ class Actuation:
         self.velocity = VehicleControl.get_velorate() * maxspeed
         self.write_steering_command()
  #       self.write_velocity_command(self.ser,self.lasttime,self.starttime)
-
+        self.write_velocity_command()
         #print("VELO:" + str(self.velocity))
         self.acceleration = VehicleControl.acc2()
 
         #print("Accelo:" + str(self.acceleration))
-    def write_velocity_command(self, ser,lasttime,starttime):
+    def write_velocity_command(self):
         """
         This function writes a velocity command to the given serial port `ser` with the specified `velocity` and `acceleration`.
 
@@ -96,40 +110,13 @@ class Actuation:
         # Calculate the time step since the last update
 
         # Initialize the current speed with the last recorded speed#
-
-        carspeed = self.carspeed
-
-        step = time.time() - lasttime
-        # print(step)
-        # print ('##')
-        # print(carspeed)
-        # print('##')
-        # print(self.acceleration  * step)
-
-        print(carspeed)
-        print(self.velocity)
-        # If the current speed is less than the target velocity, increase the speed
-        if (carspeed < self.velocity):
-            carspeed = min(self.velocity, max(.15,carspeed + (self.acceleration * step)))  ## DAMPENINING  #15 withot PID .1PID
-
-        # If the current speed is greater than the target velocity, decrease the speed
-        elif (carspeed > self.velocity):
-            carspeed = max(self.velocity, carspeed - 4*(self.acceleration * step))
-        elif (round(carspeed,6) > round(self.velocity,6)):
-            carspeed = self.velocity
-
-        # Encode the command string and write it to the serial port
-        command = f"#1:{carspeed};;\r\n".encode()
-        print("Current Speed:" + str(round(carspeed,8)) + "  target =" + str(self.velocity) + "  seconds  elapsed :" + str(time.time() - starttime))
-        print("PRINTED: " + str(command) + " To console")
-        self.ser.write(command)
-
-        # If the current speed is equal to the target velocity, return 1
-        if (carspeed == self.velocity):
-            return 1, time.time(),carspeed
+        commands = self.steeringcommands
+        for command, delay,listitem in commands:
+            serial_thread = threading.Thread(target=perform_drive_write, args=(command, delay,listitem, self.ser))
+            serial_thread.start()
 
         # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
-        return 0, time.time(),carspeed
+        return 0, time.time()
 
     def write_steering_command(self):
         """
@@ -139,7 +126,7 @@ class Actuation:
         """
         commands = self.steeringcommands
         for command, delay,listitem in commands:
-            serial_thread = threading.Thread(target=perform_serial_write, args=(command, delay,listitem, self.ser))
+            serial_thread = threading.Thread(target=perform_steering_write, args=(command, delay,listitem, self.ser))
             serial_thread.start()
             # Store a reference to the current write thread
 

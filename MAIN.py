@@ -52,7 +52,7 @@ try:
         ser.write(command)
         print("SENSING")
         Sense.senseall()
-        #cv2.imshow("TEST",Sense.colorframe)
+        #cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
         Scene.makeascene()
         time.sleep(1)

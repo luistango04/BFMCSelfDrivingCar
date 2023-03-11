@@ -14,21 +14,24 @@ class Brain:
         self.lane_follow = False
         self.acceleration = False
         self.intersection = False
-        self.override = False
+        self.override = False ## EMERGENCY FLAG
+        self.deviation = PScene.deviation
+
 
     def update(self, PScene):
         object_trigger = PScene.get_object_trigger()
         sign_trigger = PScene.get_sign_trigger()
         intersection_trigger = PScene.intersection_trigger
         traffic_light_trigger = PScene.traffic_light_trigger
-
+        self.deviation = PScene.deviation
         state_map = {
             (True, True, False, False): 'OBJECT_AND_SIGN_TRIGGER',
             (True, False, False, False): 'OBJECT_TRIGGER',
             (False, True, False, False): 'SIGN_TRIGGER',
             (False, False, True, False): 'INTERSECTION_TRIGGER',
             (False, False, False, True): 'TRAFFIC_LIGHT_TRIGGER',
-            (False, False, False, False): 'NO_TRIGGER'
+            (False, False, False, False): 'NO_TRIGGER',
+            (True, False , True, False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
 
         self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger))
@@ -103,12 +106,22 @@ class Brain:
             self.road_search = False
             self.switch_lane = False
             self.parking = False
-            self.lane_follow = Pscene.deviation
+            self.lane_follow = self.deviation
             self.acceleration = False
             self.intersection = False
         # Do something when no triggers are activated
         # ...
-
+        elif self.state == 'OBJECT_AND_INTERSECTION_TRIGGER':
+            self.break_trigger = True
+            self.road_search = False
+            self.switch_lane = False
+            self.parking = False
+            self.lane_follow = False
+            self.acceleration = False
+            self.intersection = False
+            self.override = True
+        # Do something when no triggers are activated
+        # ...
         # Return array of seven triggers
         return [self.break_trigger, self.road_search, self.switch_lane, self.parking, self.lane_follow, self.acceleration,
                 self.intersection]

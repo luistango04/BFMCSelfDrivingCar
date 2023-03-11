@@ -8,7 +8,6 @@ import usb.core           #Import for the USB library
 import usb.util           #Import for the USB library
 
 
-
 def init():
     global camera_resolutionx
     global camera_resolutiony

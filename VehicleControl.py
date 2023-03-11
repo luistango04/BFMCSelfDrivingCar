@@ -73,6 +73,8 @@ class vehiclecontrol:
     def break_execution(self):
         # Get break trigger value from brain object
         self.breaktrigger = True
+        self.steeringcommands = [(0, 0, 0)]
+        self.accelerationcommands = [(0, 0, 0)]
         ## FLUSH SERIAL SEND 0 TO CASH
         self.ser.flush()
 

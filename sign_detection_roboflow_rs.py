@@ -1,9 +1,7 @@
 #R.1 STOP/PARKING/CROSSING/STOP detection dist~50-60, mpa 50~85%
 #R.2 OTHER dist~25 should be trained again in high res.
 
-ROBOFLOW_API_KEY = "ABeUmL5hsdoyPceix50P"
-ROBOFLOW_MODEL = "tes_1/1" 
-ROBOFLOW_SIZE = 416
+
 
 import Setup
 import cv2
@@ -14,33 +12,24 @@ import time
 import json
 
 # Construct the Roboflow Infer URL
+
 upload_url = "".join([
     "http://127.0.0.1:9001/",
     ROBOFLOW_MODEL,
     "?api_key=",
     ROBOFLOW_API_KEY,
-   
+
     "&stroke=5"
 ])
 
-# Start streaming
-pipeline = Setup.init()
+ROBOFLOW_API_KEY = "ABeUmL5hsdoyPceix50P"
+ROBOFLOW_MODEL = "tes_1/1"
+ROBOFLOW_SIZE = 416
+
+
 
 # Infer via the Roboflow Infer API and return the result
-def image_():
-    # Wait for a coherent pair of frames: depth and color
-    frames = pipeline.wait_for_frames()
-    color_frame = frames.get_color_frame()
 
-    # Convert images to numpy arrays
-    color_image = np.asanyarray(color_frame.get_data())
-
-    # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
-    height, width, channels = color_image.shape
-    scale = ROBOFLOW_SIZE / max(height, width)
-    img = cv2.resize(color_image, (round(scale * width), round(scale * height)))
-
-    return img
 
 def get_prediction_classes(http_response):
     response_dict = http_response.data.decode('utf-8')
@@ -54,9 +43,9 @@ def get_prediction_classes(http_response):
 
     return classes
 
-def infer():
+def infer(img):
     # Encode image to base64 string
-    retval, buffer = cv2.imencode('.jpg', image_())
+    retval, buffer = cv2.imencode('.jpg', img) ###
     img_str = base64.b64encode(buffer)
 
     # Get prediction from Roboflow Infer API

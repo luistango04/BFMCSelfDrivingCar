@@ -43,10 +43,27 @@ class PScene:
 
 	
     def makeascene(self):
-        self.runobjectdetection()
-        self.intersectiondetection()
-        self.lane_detection()
+        try:
+            self.intersectiondetection()
+            self.lane_detection()
+        except:
+            print("ERROR IN SCENE")
     def runobjectdetection(self):
+
+            # Wait for a coherent pair of frames: depth and color
+            # frames = pipeline.wait_for_frames()
+            # color_frame = frames.get_color_frame()
+            #
+            # # Convert images to numpy arrays
+            # color_image = np.asanyarray(color_frame.get_data())
+            #
+            # # Resize (while maintaining the aspect ratio) to improve speed and save bandwidth
+            # height, width, channels = color_image.shape
+            color_image  = self.colorframe
+                scale = ROBOFLOW_SIZE / max(height, width)  ##
+            img = cv2.resize(color_image, (round(scale * camera_resolutionx), round(scale * camera_resolutiony)))
+            infer(img)
+            return 1
 
 
 
@@ -74,6 +91,7 @@ class PScene:
         return 0
         ## add additional param for resolution x, resolution y
         ## in case you need it for the tensor function param
+
 
     def intersectiondetection(self):
 
@@ -119,7 +137,7 @@ class PScene:
                     ##print xlocation and message that intersection has been found.
                     print("intersectionfound")
                     print("Location:" + str(highest_peak_x) + " above birds eye view need to calibrate")
-                self.intersection_trigger = True
+                    self.intersection_trigger = True
                 return bottomroi + bottomroi
                 ## REVERT THIS IS THE LOCATION OF INTERSECTION. Just needs calibration. The rest of the qualifying
 

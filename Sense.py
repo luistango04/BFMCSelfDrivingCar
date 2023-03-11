@@ -103,7 +103,7 @@ class SensingInput:
 
     def senseall(self):  # runs through all methods to refresh the senses. ## returns bit to sendto debug layer
      	
-        error1 = 0 #self.velocity()
+        error1 = self.velocity()
 
         error2 = self.Intellsensor()
 
