@@ -100,7 +100,7 @@ class vehiclecontrol:
             print(f"Invalid trigger: {trigger}")
     def stopstraight(self):
         self.steeringcommands = [(0, 0, 0)]
-        self.velocommands = [(.0, 0, 2),(.2, 4 , 1),(.3, 0, 0)]
+        self.velocommands = [(0.0, 0, 2),(0.3, 2, 1),(0.3,4,0)]
         print("Turning left")
 
     def turn_left(self):

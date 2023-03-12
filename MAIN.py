@@ -69,7 +69,7 @@ try:
             print("DEBUG MODE")
             print(Scene)
             print("BRAIN GOT")
-            print(Brain)
+        print(Brain)
 
 
             #cv2.waitKey(5000)
