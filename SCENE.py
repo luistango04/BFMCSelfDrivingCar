@@ -64,7 +64,7 @@ class PScene:
         # try:
             self.intersectiondetection()
         # except:
-            print("ERROR IN Intersection ")
+            #print("ERROR IN Intersection ")
         # try:
             self.deviation,self.direction = (self.lane_detection())
         # except:
@@ -131,14 +131,14 @@ class PScene:
                 camera_resolutiony = self.camera_resolutiony
                 start_time = time.time()
 
-                bottomroi = (1 * camera_resolutiony)
+                bottomroi = (.95 * camera_resolutiony)
 
-                toproi = (.8 * camera_resolutiony)
+                toproi = (.65 * camera_resolutiony)
                 c1 = ((int)(.3 * camera_resolutionx), (int)(toproi))  ## TOP LEFT
 
-                c2 = ((int)(0 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM LEFT
+                c2 = ((int)(.1 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM LEFT
 
-                c3 = ((int)(1 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM RIGHT
+                c3 = ((int)(.9 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM RIGHT
                 c4 = ((int)(.6 * camera_resolutionx), (int)(toproi))  # TOP RIGHT
 
                 ## OVER COMPENSATE
@@ -155,18 +155,19 @@ class PScene:
                 birdView = perspectiveWarpintersect(frameintersect, src, dst, camera_resolutionx, camera_resolutiony)
                 rotated = cv2.rotate(birdView, cv2.ROTATE_90_CLOCKWISE)
                 #cv2.imshow("Rotated", rotated)
-                # cv2.waitKey(15000)
+                #cv2.waitKey(5000)
 
                 img, hls, grayscale, thresh, blur, canny = processImage(rotated)
                 hist, midpoint, highest_peak_x, average_location, highest_peak_y, revertthis, dataline = plotHistogramintersection(
                     thresh)
-                # plt.clf()
-                # plt.plot(hist)
-                # plt.show()
+                #plt.clf()
+                #plt.plot(hist)
+                #plt.show()
+
                 #print(highest_peak_y)
-                if (highest_peak_y > 30000):
+                if (highest_peak_y > 46000):
                     ##print xlocation and message that intersection has been found.
-                    #print("intersectionfound")
+                    print("intersectionfound")
                     print("Location:" + str(highest_peak_x) + " above birds eye view need to calibrate")
                     self.intersection_trigger = True
                 return bottomroi + bottomroi
@@ -229,11 +230,11 @@ class PScene:
 
                 # Matrix to warp the image for birdseye window
 
-                cv2.circle(frame, c1, 5, (0, 0, 255), -1)
-                cv2.circle(frame, c2, 5, (0, 0, 255), -1)
-                cv2.circle(frame, c3, 5, (0, 0, 255), -1)
-                cv2.circle(frame, c4, 5, (0, 0, 255), -1)
-                cv2.imshow("ROIS", frame)
+                #cv2.circle(frame, c1, 5, (0, 0, 255), -1)
+                #cv2.circle(frame, c2, 5, (0, 0, 255), -1)
+                #cv2.circle(frame, c3, 5, (0, 0, 255), -1)
+                #cv2.circle(frame, c4, 5, (0, 0, 255), -1)
+                #cv2.imshow("ROIS", frame)
 
     #cv2.imshow
             try:

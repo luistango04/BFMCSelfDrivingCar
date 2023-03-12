@@ -11,9 +11,9 @@ import Actuation
 import cv2
 import serial
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
-ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
+#ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
 
-#ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 pipeline = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
 ser.flush()
@@ -50,7 +50,7 @@ start_time = time.time()
 iter = 1
 carspeed = .2
 command = f"#1:{carspeed};;\r\n".encode()
-ser.write(command)
+#ser.write(command)
 try:
     while True:
 
@@ -62,7 +62,7 @@ try:
         # cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
         Scene.makeascene()
-        time.sleep(1)
+   
         Brain.update(Scene)
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):

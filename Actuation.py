@@ -78,7 +78,7 @@ def perform_drive_write(command, delay,listitem,actuation, ser):
         print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
         print(command)
     ser.write(command)
-
+    print(command)
     if not listitem:
         velofree = True
         update_bothfree()

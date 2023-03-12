@@ -36,12 +36,13 @@ class Brain:
             (True, True, False, False, False): 'OBJECT_TRIGGER',
             (True, True, False, False, False): 'SIGN_TRIGGER',
             (False, False, True, False, False): 'INTERSECTION_TRIGGER',
+            (False, False, True, False, True): 'INTERSECTION_TRIGGER',
             (True, True, False, False, False): 'TRAFFIC_LIGHT_TRIGGER',
             (True, True, False, False, False): 'NO_TRIGGER',
             (True, True, False, False, True): 'LANE_CORRECTION',
             (True, True, False, False, False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
-
+        print(state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect)))
         self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect))
 
         # Update instance variables for the seven triggers
@@ -95,7 +96,7 @@ class Brain:
             self.lane_follow = False
             self.acceleration = False
             ## READ INSTRUCTIONS OTHERWISE LEFT
-            self.intersection = "left"
+            self.intersection = "right"
 
         # Do something when intersection trigger is activated
         # ...
