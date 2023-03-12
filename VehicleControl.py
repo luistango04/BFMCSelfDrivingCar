@@ -8,13 +8,12 @@ class vehiclecontrol:
         self.brain = brain
         self.Sensinginput = Sensinginput
         self.prev_error = 0
-        self.steering = 0
-        self.velorate = 0
+
         self.ser = ser
         self.accelrate = 0
         self.preverrors = (0,0)
         self.steeringcommands  = []
-        self.accelerationcommands = []
+        self.velocommands = []
         self.steeringcap = [-23,23]
 
     def updatefrombrainscene(self, Brain,PScene):
@@ -42,39 +41,27 @@ class vehiclecontrol:
         elif self.brain.intersection:
             self.intersectionmanagement()
         else:
-            self.brain.default_action()
+            self.default_action()
 
 
-
-    def __call__(self, steering, velorrate, accelrate,ser):
-
-        self.steering = steering
-        self.velorate = velorrate
-        self.ser = ser
-        self.accelrate = accelrate
-
-        print("Instance is called via special method")
-        return self
+    def default_action(self):
+        # Do something when no trigger is activated
+        # ...
+        # send velocity to very slow and steering to center
+        self.velocommands = [(.18,0, 0)]
+        self.steeringcommands = [(0,0, 0)]
+        pass
 
     def flush(self):
         self.ser.flush()
 
-        return self.steering
 
-
-    def get_steering(self):
-        return self.steering
-
-    def acc2(self):
-        return self.accelrate
-    def get_velorate(self):
-        return self.velorate
 
     def break_execution(self):
         # Get break trigger value from brain object
         self.breaktrigger = True
         self.steeringcommands = [(0, 0, 0)]
-        self.accelerationcommands = [(0, 0, 0)]
+        self.velocommands = [(0, 0, 0)]
         ## FLUSH SERIAL SEND 0 TO CASH
         self.ser.flush()
 
@@ -86,20 +73,17 @@ class vehiclecontrol:
         #break_trigger = self.brain.break_trigger
 
         # Execute break function based on trigger value
-    def accel(self,rate = .75):
-        # Get break trigger value from brain object
-        self.velorate =  rate ## % of max velocity ## DEFAULT VELOCITY
-        self.acceleration = 5 ## % increase per step time
-        ## FLUSH SERIAL SEND 0 TO CASH
+    def accel(self,rate = .1):
 
-
+          self.steeringcommands = [(0, 0, 0)]
+          self.velocommands = [(self.accelrate, 0, 0)]
+          print("Accelerating")
 
     def intersectionmanagement(self):
         trigger = self.brain.intersection
         if trigger == 'left':
             self.turn_left()
-            self.steeringcommands = [(0,0,2),(-15,.5,1),(0,1.5,0)]
-            self.velorate = 0.3
+
             self.current_direction = 'left'
 
         elif trigger == 'right':
@@ -111,10 +95,14 @@ class vehiclecontrol:
         else:
             print(f"Invalid trigger: {trigger}")
     def turn_left(self):
+        self.steeringcommands = [(0, 0, 2), (-18, 2, 1), (0, 7, 0)]
+        self.velocommands = [(.2, 0, 0)]
         print("Turning left")
 
     def turn_right(self):
-        print("Turning right")
+        self.steeringcommands = [(0, 0, 2), (18, 2, 1), (0, 5, 0)]
+        self.velorate = 0.3
+        print("Turning left")
 
     def go_straight(self):
         print("Going straight")
@@ -142,8 +130,8 @@ class vehiclecontrol:
         angle = Kp * error + Kd * error_diff
 
         # Apply steering angle to the vehicle
+        self.steeringcommands = [(angle, 0, 0)]
 
-        self.steering = angle
         # speed is lastspeed
         return angle
 

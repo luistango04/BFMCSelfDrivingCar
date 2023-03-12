@@ -12,7 +12,6 @@ diameterofwheel = 65
 class SensingInput:
     def __init__(self,ser,pipeline, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
         self.pipeline = pipeline ##
-        self.speed = 0
         self.colorframe = 0
         self.ser = ser
         self.accel = 0
@@ -71,7 +70,7 @@ class SensingInput:
             # Read a line of data from the serial port
             data = self.ser.readline().decode().strip()
 
-            print(data)
+            #print(data)
 	
             if data:
                 # Parse the data to extract the RPM value
@@ -89,8 +88,8 @@ class SensingInput:
 
            except:
 		
-            print("ERROR IN RPM")
-            return 0
+ #           print("ERROR IN RPM")
+            return "ERROR IN RPM"
     def gettilt(self):
 
         # Get the current tilt angle
@@ -102,12 +101,13 @@ class SensingInput:
 
 
     def senseall(self):  # runs through all methods to refresh the senses. ## returns bit to sendto debug layer
-     	
-        error1 = self.velocity()
+        try:
+            self.Intellsensor()
+            self.velocity()
 
-        error2 = self.Intellsensor()
-
-        return error1 + error2
+            return  1
+        except:
+            return 0
 
     def get_COLORFRAME(self):
 

@@ -132,7 +132,7 @@ def perspectiveWarp(inpImage,src,dst,camera_resolutionx,camera_resolutiony):
     frame = inpImage
     # Get image size
     img_size = (inpImage.shape[1], inpImage.shape[0])
-    print(img_size)
+    #print(img_size)
     # Perspective points to be warped
     ############ update this to identify region lane of interest based on lens of camera
 
@@ -524,7 +524,7 @@ def offCenter(meanPts, inpFrame):
 
     # Calculating deviation in cm
     mpts = meanPts[-1][-1][-2].astype(int)
-    print(mpts)
+    #print(mpts)
     pixelDeviation = inpFrame.shape[1] / 2 - abs(mpts)
     deviation = pixelDeviation
     direction = "left" if deviation < 0 else "right"

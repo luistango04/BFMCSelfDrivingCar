@@ -1,7 +1,7 @@
 import sys
 import Setup
 from matplotlib import pyplot as plt, cm, colors
-
+from Setup import DEBUG_MODE
 from lanedetection import *
 from sign_detection_roboflow_rs import *
 sys.path.append('.')
@@ -23,7 +23,7 @@ class PScene:
         if(SensingInput is not None):
 
             self.colorframe = SensingInput.colorframe
-            print("FRAME IS NOT NONE")
+            #print("FRAME IS NOT NONE")
             #cv2.imshow("COLOR", self.colorframe)
         else:
             sampleframe = cv2.imread(r"D:\BOSCH MOBILITY\BFMCSELFDRIVINGCAR\reallofscenter.png")
@@ -43,21 +43,28 @@ class PScene:
         self.traffic_light_object_trigger = False
         self.crossing_trigger = False
         self.stop_trigger = False
-	self.parking_trigger = False
-	self.priority_trigger = False
-	
-	
+        self.parking_trigger = False
+        self.priority_trigger = False
+        self.signs = []
 
 
 
-	
+
+
     def makeascene(self):
         try:
             self.runobjectdetection()
+        except requests.exceptions.ConnectionError as e:
+            print("Failed to establish a connection:", e)
+        except requests.exceptions.Timeout as e:
+            print("Request timed out:", e)
+        except requests.exceptions.RequestException as e:
+            print("An error occurred:", e)
+        try:
             self.intersectiondetection()
             self.lane_detection()
         except:
-            print("ERROR IN SCENE")
+            print("ERROR IN Intersection ")
     def runobjectdetection(self):
 
             # Wait for a coherent pair of frames: depth and color
@@ -72,42 +79,40 @@ class PScene:
             color_image  = self.colorframe
             scale = ROBOFLOW_SIZE / max(camera_resolutiony, camera_resolutionx)  ##
             img = cv2.resize(color_image, (round(scale * camera_resolutionx), round(scale * camera_resolutiony)))
-            self.signs(infer(img))
-	    sign_index_matrix = infer(img)
-	    # update Boolean variables based on the classes that are required right now.
-		
-	    if 0 in sign_index_matrix:
-		crossing_trigger = True
-	    else:
-		crossing_trigger = False
-		
-	    if 5 in sign_index_matrix:
-		parking_trigger = True
-	    else:
-		parking_trigger = False
-		
-	    if 6 in sign_index_matrix:
-		priority_trigger = True
-	    else:
-		priority_trigger = False
-		
-	    if 7 in sign_index_matrix:
-		stop_trigger = True
-	    else:
-		stop_trigger = False
-		
-	    if 8 in sign_index_matrix:
-		traffic_light_object_trigger = True
-	    else:
-		traffic_light_object_trigger = False
-		
-		 ## traffic sign? 8
-		 ## traffic stop sign 7
-                 ## pedestrian cross 0 
-                 ## parking 5
-                 ## priority 6
- 
+            self.signs = infer(img)
+            sign_index_matrix = infer(img)
+            # update Boolean variables based on the classes that are required right now.
 
+            if 0 in sign_index_matrix:
+                self.crossing_trigger = True
+            else:
+              self.crossing_trigger = False
+
+            if 5 in sign_index_matrix:
+                self.parking_trigger = True
+            else:
+               self.parking_trigger = False
+
+            if 6 in sign_index_matrix:
+               self.priority_trigger = True
+            else:
+               self.priority_trigger = False
+
+            if 7 in sign_index_matrix:
+              self.stop_trigger = True
+            else:
+              self.stop_trigger = False
+
+            if 8 in sign_index_matrix:
+                self.traffic_light_object_trigger = True
+            else:
+                self.traffic_light_object_trigger = False
+
+             ## traffic sign? 8
+             ## traffic stop sign 7
+                     ## pedestrian cross 0
+                     ## parking 5
+                     ## priority 6
             return 1
 
 
@@ -153,10 +158,10 @@ class PScene:
                 # plt.clf()
                 # plt.plot(hist)
                 # plt.show()
-                print(highest_peak_y)
-                if (highest_peak_y > 40000):
+                #print(highest_peak_y)
+                if (highest_peak_y > 25000):
                     ##print xlocation and message that intersection has been found.
-                    print("intersectionfound")
+                    #print("intersectionfound")
                     print("Location:" + str(highest_peak_x) + " above birds eye view need to calibrate")
                     self.intersection_trigger = True
                 return bottomroi + bottomroi
@@ -202,42 +207,48 @@ class PScene:
             # p5 = [camera_resolutionx/2,0]  # TOP RIGHT
             dst = np.float32([p1, p2, p3, p4])
         #cv2.imshow
+            try:
+                birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.colorframe,src,dst,self.camera_resolutionx,self.camera_resolutiony)
 
-            birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.colorframe,src,dst,self.camera_resolutionx,self.camera_resolutiony)
+
+                #cv2.imshow("birdView", birdView)
+                img, hls, grayscale, thresh, blur, canny = processImage(birdView)
+                imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
+                imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
+                histogram, leftxBase, rightxBase,midpoint = plotHistogram(thresh)
+                #plt.plot(histogram)
+                #plt.show()
+
+    #
+                ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, histogram)
+                draw_info = general_search(thresh, left_fit, right_fit)
+                #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
+
+                #     #
+                #     #
+                #     # # Filling the area of detected lanes with green
+                meanPts, result = draw_lane_lines(self.colorframe, thresh, minverse, draw_info)
+                deviation,direction = offCenter(meanPts,self.colorframe)
+                if(DEBUG_MODE):
+                    cv2.imshow("RESULTS:", result)
+    #            deviation = -1*pixelDeviation * Setup.xm_per_pix
+    #            direction = "left" if deviation < 0 else "right"
+
+                #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,Setup.ym_per_pix,Setup.xm_per_pix) ## IF curavture is needed
+                #meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
+                # print(deviation)
+                # print(direction)
 
 
-            #cv2.imshow("birdView", birdView)
-            img, hls, grayscale, thresh, blur, canny = processImage(birdView)
-            imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
-            imgR, hlsR, grayscaleR, threshR, blurR, cannyR = processImage(birdViewR)
-            histogram, leftxBase, rightxBase,midpoint = plotHistogram(thresh)
-            #plt.plot(histogram)
-            #plt.show()
-
-#
-            ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, histogram)
-            draw_info = general_search(thresh, left_fit, right_fit)
-            #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx)
-            
-            #     #
-            #     #
-            #     # # Filling the area of detected lanes with green
-            meanPts, result = draw_lane_lines(self.colorframe, thresh, minverse, draw_info)
-            deviation,direction = offCenter(meanPts,self.colorframe)
-#            deviation = -1*pixelDeviation * Setup.xm_per_pix
-#            direction = "left" if deviation < 0 else "right"
-            
-            #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,Setup.ym_per_pix,Setup.xm_per_pix) ## IF curavture is needed
-            #meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
-            # print(deviation)
-            # print(direction)
-
-   
-            #cv2.imshow('birdViewR', hlsR)
-            #cv2.imshow('birdViewL', hlsL)
-            #print(draw_info)
-            self.deviation = deviation
-            self.direction = direction
+                #cv2.imshow('birdViewR', hlsR)
+                #cv2.imshow('birdViewL', hlsL)
+                #print(draw_info)
+                self.deviation = deviation
+                self.direction = direction
+            except:
+                self.deviation = 0
+                self.direction = "straight"
+                print("No lanes found")
             return deviation,direction
 
             #ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, hist)
