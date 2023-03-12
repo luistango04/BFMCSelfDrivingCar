@@ -63,30 +63,30 @@ def perform_steering_write(command, delay,listitem, actuation, ser):
     update_bothfree()
 
 def perform_drive_write(command, delay,listitem,actuation, ser):
+    actuation.steeringstatus = False
     # Wait for the specified delay
-    global velofree
     expected_time = time.time() + delay
+    global steeringfree
 
-    print(f"{time.time():.3f} - Delaying for {delay:.3f} seconds...")
-#    time.sleep(delay)
+
+    time.sleep(delay)
 
     actual_time = time.time()
-#    print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
 
+
+    command = check_angle(command)
     command = f"#1:{round(command, 5)};;\r\n".encode()
     if (DEBUG_MODE):
         print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
         print(command)
     ser.write(command)
-    print(command)
-    if not listitem:
-        velofree = True
-        update_bothfree()
 
+    if not listitem:
+
+        actuation.velocitystatus =  True
 
     else:
-        velofree = False
-        update_bothfree()
+        actuation.velocitystatus =  True
     update_bothfree()
 class Act:
     def __init__(self,VehicleControl,ser = Mock()):
