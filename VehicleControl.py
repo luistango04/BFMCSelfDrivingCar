@@ -34,7 +34,7 @@ class vehiclecontrol:
         elif self.brain.parking:
             self.perform_parking()
         elif self.brain.lane_follow:
-            print("Intersection Triggered")
+            print("lane follow Triggered")
 
             self.lanefollow()
         elif self.brain.acceleration:
@@ -143,7 +143,7 @@ class vehiclecontrol:
         print(angle)
         # Apply steering angle to the vehicle
         self.steeringcommands = [(angle, 0, 1),(0, .25,0 )]
-
+        self.velocommands = [(.3, 0, 0)]
         # speed is lastspeed
         return angle
 
