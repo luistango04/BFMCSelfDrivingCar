@@ -48,7 +48,7 @@ class vehiclecontrol:
         # Do something when no trigger is activated
         # ...
         # send velocity to very slow and steering to center
-        self.velocommands = [(.18,0, 0)] #velocity commands are (velocity, time, mode)
+        self.velocommands = [(.3,0, 0)] #velocity commands are (velocity, time, mode)
         self.steeringcommands = [(0,0, 0)] #steering commands are (angle, time, mode)
         pass
 
@@ -95,11 +95,11 @@ class vehiclecontrol:
             print(f"Invalid trigger: {trigger}")
     def turn_left(self):
         self.steeringcommands = [(0, 0, 2), (-23, 2, 1), (0, 8, 0)]
-        self.velocommands = [(.2, 0, 0)]
+        self.velocommands = [(.3, 0, 0)]
         print("Turning left")
 
     def turn_right(self):
-        self.steeringcommands = [(0, 0, 2), (23+3, 2, 1), (0, 5, 0)] #+3 for steeringadjustment of -3 deg
+        self.steeringcommands = [(0, 0, 2), (23, 2, 1), (0, 5, 0)] #+3 for steeringadjustment of -3 deg
         self.velorate = 0.3
         print("Turning right")
 
