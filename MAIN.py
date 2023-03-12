@@ -9,10 +9,11 @@ from VehicleControl import vehiclecontrol
 from  Actuation import bothfree,velofree,steeringfree
 import Actuation
 import cv2
-
+import serial
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
-ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
-# ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+#ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
+
+ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 pipeline = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
 ser.flush()
@@ -64,10 +65,12 @@ try:
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):
             print("DEBUG MODE")
+            print(Scene)
+            print("BRAIN GOT")
             print(Brain)
-            print(Sense)
-            cv2.imshow("TEST", Sense.colorframe)
-            cv2.waitKey(10000)
+
+
+            cv2.waitKey(5000)
 
         # time.sleep(2)
         if (not (bothfree) and Brain.override == False):

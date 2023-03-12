@@ -108,13 +108,13 @@ class vehiclecontrol:
     def lanefollow(self):
         ## Flush serial
         self.ser.flush()
-
+        error = self.brain.lane_follow/10
         # stay and correct to center of Lane
         Kp = 0.1 # Proportional gain
         Kd = 0.2  # Derivative gain
 
         # Define initial error and derivative of error
-        error = self.brain.lane_follow
+
         prev_error = 0
 
         # PD controller
@@ -126,7 +126,7 @@ class vehiclecontrol:
         print(error_diff)
         # Calculate steering angle
         angle = Kp * error + Kd * error_diff
-
+        print(angle)
         # Apply steering angle to the vehicle
         self.steeringcommands = [(angle, 0, 0)]
 

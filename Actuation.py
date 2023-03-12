@@ -4,7 +4,7 @@ import time
 import serial
 from unittest.mock import Mock
 from Setup import DEBUG_MODE
-ser = Mock()
+
 # Create a Serial object for the desired port and configure it with the appropriate settings
 velofree = True
 steeringfree = True

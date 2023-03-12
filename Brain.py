@@ -16,6 +16,7 @@ class Brain:
         self.intersection = False
         self.override = False ## EMERGENCY FLAG
         self.deviation = PScene.deviation
+        self.direction = PScene.direction
 
 
     def update(self, PScene):
@@ -24,17 +25,24 @@ class Brain:
         intersection_trigger = PScene.intersection_trigger
         traffic_light_trigger = PScene.traffic_light_trigger
         self.deviation = PScene.deviation
+        self.direction = PScene.direction
+
+        if(self.deviation > 20):
+            lancorrect = True
+        else:
+            lancorrect = False
         state_map = {
-            (True, True, False, False): 'OBJECT_AND_SIGN_TRIGGER',
-            (True, False, False, False): 'OBJECT_TRIGGER',
-            (False, True, False, False): 'SIGN_TRIGGER',
-            (False, False, True, False): 'INTERSECTION_TRIGGER',
-            (False, False, False, True): 'TRAFFIC_LIGHT_TRIGGER',
-            (False, False, False, False): 'NO_TRIGGER',
-            (True, False , True, False): 'OBJECT_AND_INTERSECTION_TRIGGER',
+            (True, True, False, False,False): 'OBJECT_AND_SIGN_TRIGGER',
+            (True, True, False, False, False): 'OBJECT_TRIGGER',
+            (True, True, False, False, False): 'SIGN_TRIGGER',
+            (True, True, False, False, False): 'INTERSECTION_TRIGGER',
+            (True, True, False, False, False): 'TRAFFIC_LIGHT_TRIGGER',
+            (True, True, False, False, False): 'NO_TRIGGER',
+            (True, True, False, False, True): 'LANE_CORRECTION',
+            (True, True, False, False, False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
 
-        self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger))
+        self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect))
 
         # Update instance variables for the seven triggers
         self.break_trigger = 0
@@ -120,6 +128,15 @@ class Brain:
             self.acceleration = False
             self.intersection = False
             self.override = True
+        elif self.state == 'LANE_CORRECTION':
+            self.break_trigger = True
+            self.road_search = False
+            self.switch_lane = False
+            self.parking = False
+            self.lane_follow = True
+            self.acceleration = False
+            self.intersection = False
+            self.override = False
         # Do something when no triggers are activated
         # ...
         # Return array of seven triggers
@@ -136,6 +153,8 @@ class Brain:
                f"Parking: {self.parking}\n" + \
                f"Lane follow: {self.lane_follow}\n" + \
                f"Acceleration: {self.acceleration}\n" + \
+               f"Deviation: {self.deviation}\n" + \
+               f"Direction: {self.direction}\n" + \
                f"Intersection: {self.intersection}\n"
 
 #brainTEST = Brain.from_values(True, 30, True, False, "red", (0, 0, 0), "north")

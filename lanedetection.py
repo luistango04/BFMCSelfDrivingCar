@@ -500,10 +500,10 @@ def draw_lane_lines(original_image, warped_image, Minv, draw_info):
 
     # Plot the x and y coordinates
     plt.plot(x_coords, y_coords)
-
+    #plt.show()
     # Show the plot
 
-
+    #print(pts_mean)
     cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
     cv2.fillPoly(color_warp, np.int_([pts_mean]), (0, 255, 255))
 
@@ -525,9 +525,11 @@ def offCenter(meanPts, inpFrame):
     # Calculating deviation in cm
     mpts = meanPts[-1][-1][-2].astype(int)
     #print(mpts)
+    #print("###")
     pixelDeviation = inpFrame.shape[1] / 2 - abs(mpts)
     deviation = pixelDeviation
-    direction = "left" if deviation < 0 else "right"
+    #print(deviation)
+    direction = "right" if deviation < 0 else "left"
 
     return deviation, direction
 ################################################################################

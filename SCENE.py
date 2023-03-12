@@ -53,22 +53,22 @@ class PScene:
 
 
     def makeascene(self):
-        try:
-            self.runobjectdetection()
-        except requests.exceptions.ConnectionError as e:
-            print("Failed to establish a connection:", e)
-        except requests.exceptions.Timeout as e:
-            print("Request timed out:", e)
-        except requests.exceptions.RequestException as e:
-            print("An error occurred:", e)
-        try:
+        # try:
+        #     self.runobjectdetection()
+        # except requests.exceptions.ConnectionError as e:
+        #     print("Failed to establish a connection:", e)
+        # except requests.exceptions.Timeout as e:
+        #     print("Request timed out:", e)
+        # except requests.exceptions.RequestException as e:
+        #     print("An error occurred:", e)
+        # try:
             self.intersectiondetection()
-        except:
+        # except:
             print("ERROR IN Intersection ")
-        try:
-            self.lane_detection()
-        except:
-            print("lanedetectionfailure")
+        # try:
+            self.deviation,self.direction = (self.lane_detection())
+        # except:
+            #print("lanedetectionfailure")
     def runobjectdetection(self):
 
             # Wait for a coherent pair of frames: depth and color
@@ -131,14 +131,15 @@ class PScene:
                 camera_resolutiony = self.camera_resolutiony
                 start_time = time.time()
 
-                # Read the input image
-                bottomroi = (.9 * camera_resolutiony)
-                c1 = ((int)(.4 * camera_resolutionx), (int)(.5 * camera_resolutiony))  ## TOP LEFT
+                bottomroi = (1 * camera_resolutiony)
 
-                c2 = ((int)(.45 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM LEFT
+                toproi = (.8 * camera_resolutiony)
+                c1 = ((int)(.3 * camera_resolutionx), (int)(toproi))  ## TOP LEFT
 
-                c3 = ((int)(.55 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM RIGHT
-                c4 = ((int)(.6 * camera_resolutionx), (int)(.5 * camera_resolutiony))  # TOP RIGHT
+                c2 = ((int)(0 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM LEFT
+
+                c3 = ((int)(1 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM RIGHT
+                c4 = ((int)(.6 * camera_resolutionx), (int)(toproi))  # TOP RIGHT
 
                 ## OVER COMPENSATE
                 # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
@@ -192,29 +193,56 @@ class PScene:
 
     def lane_detection(self):
         # try:
-            c1 = ((int)(.2 * self.camera_resolutionx), (int)(.3 *  self.camera_resolutiony))  ## TOP LEFT
-            c2 = [0, (int)(.7 *  self.camera_resolutiony)]  ## BOTTOM LEFT
-            c3 = [ self.camera_resolutionx, (int)(.7 *  self.camera_resolutiony)]  ## BOTTOM RIGHT
-            c4 = [(int)(.8 *  self.camera_resolutionx), (int)(.3 *  self.camera_resolutiony)]  # TOP RIGHT
+            # Read the input image
+            bottomroi = (1 * camera_resolutiony)
+
+            toproi = (.6 * camera_resolutiony)
+            c1 = ((int)(.3 * camera_resolutionx), (int)(toproi))  ## TOP LEFT
+
+            c2 = ((int)(.1 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM LEFT
+
+            c3 = ((int)(.9 * camera_resolutionx), (int)(bottomroi))  ## BOTTOM RIGHT
+            c4 = ((int)(.7 * camera_resolutionx), (int)(toproi))  # TOP RIGHT
 
             src = np.float32([c1, c2, c3, c4])
-            ## OVER COMPENSATE
-            # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
+                ## OVER COMPENSATE
+                # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
 
 
             ## OVER COMPENSATE
             # Window to be shown ## NEED ADJUSTMENT  WHEN GO LIVE TO HANDLE THE RESOLUTIONS
-            p1 = [0, 0]  ## TOP LEFT
+            p1 = [-.3*self.camera_resolutionx, 0]  ## TOP LEFT
             p2 = [(.001 * self.camera_resolutionx), self.camera_resolutiony]  ## BOTTOM LEFT
             p3 = [(.999 * self.camera_resolutionx), self.camera_resolutiony]  ## BOTTOM RIGHT
-            p4 = [self.camera_resolutionx, 0]  # TOP RIGHT
+            p4 = [1.3*self.camera_resolutionx, 0]  # TOP RIGHT
             # p5 = [camera_resolutionx/2,0]  # TOP RIGHT
             dst = np.float32([p1, p2, p3, p4])
-        #cv2.imshow
+
+            if(DEBUG_MODE):
+                frame = self.colorframe
+            # Get image size
+
+                #img_size = (inpImage.shape[1], inpImage.shape[0])
+                # print(img_size)
+                # Perspective points to be warped
+                ############ update this to identify region lane of interest based on lens of camera
+
+                # Matrix to warp the image for birdseye window
+
+                cv2.circle(frame, c1, 5, (0, 0, 255), -1)
+                cv2.circle(frame, c2, 5, (0, 0, 255), -1)
+                cv2.circle(frame, c3, 5, (0, 0, 255), -1)
+                cv2.circle(frame, c4, 5, (0, 0, 255), -1)
+                cv2.imshow("ROIS", frame)
+
+    #cv2.imshow
             try:
                 birdView, birdViewL, birdViewR, minverse = perspectiveWarp(self.colorframe,src,dst,self.camera_resolutionx,self.camera_resolutiony)
 
-
+                if(DEBUG_MODE):
+                    cv2.imshow("birdView", birdView)
+                    cv2.imshow("birdViewL", birdViewL)
+                    cv2.imshow("birdViewR", birdViewR)
                 #cv2.imshow("birdView", birdView)
                 img, hls, grayscale, thresh, blur, canny = processImage(birdView)
                 imgL, hlsL, grayscaleL, threshL, blurL, cannyL = processImage(birdViewL)
@@ -232,11 +260,13 @@ class PScene:
                 #     #
                 #     # # Filling the area of detected lanes with green
                 meanPts, result = draw_lane_lines(self.colorframe, thresh, minverse, draw_info)
+                #print(meanPts)
                 deviation,direction = offCenter(meanPts,self.colorframe)
                 if(DEBUG_MODE):
                     cv2.imshow("RESULTS:", result)
-    #            deviation = -1*pixelDeviation * Setup.xm_per_pix
-    #            direction = "left" if deviation < 0 else "right"
+                    print(direction)
+                    print(deviation)
+
 
                 #curveRad, curveDir = measure_lane_curvature(ploty, left_fitx, right_fitx,Setup.ym_per_pix,Setup.xm_per_pix) ## IF curavture is needed
                 #meanPts, result = draw_lane_lines(self.frame, thresh, minverse, draw_info)
@@ -247,14 +277,16 @@ class PScene:
                 #cv2.imshow('birdViewR', hlsR)
                 #cv2.imshow('birdViewL', hlsL)
                 #print(draw_info)
-                self.deviation = deviation
-                self.direction = direction
+                #self.deviation = deviation
+                #self.direction = direction
+                return deviation, direction
             except:
-                self.deviation = 0
-                self.direction = "straight"
+                deviation = 0
+                direction = "straight"
+                return deviation, direction
                 self.nolane = True
                 print("No lanes found")
-            return deviation,direction
+
 
             #ploty, left_fit, right_fit, left_fitx, right_fitx = slide_window_search(thresh, hist)
 
