@@ -75,7 +75,7 @@ try:
             #cv2.waitKey(5000)
 
         # time.sleep(2)
-        if (not (Act.steeringstatus) and Brain.override == False):
+        if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):
             print("carnotready")
             pass
         else:

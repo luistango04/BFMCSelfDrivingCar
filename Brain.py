@@ -17,6 +17,7 @@ class Brain:
         self.override = False ## EMERGENCY FLAG
         self.deviation = PScene.deviation
         self.direction = PScene.direction
+        self.stop_trigger = False
 
 
     def update(self, PScene):
@@ -26,24 +27,25 @@ class Brain:
         traffic_light_trigger = PScene.traffic_light_trigger
         self.deviation = PScene.deviation
         self.direction = PScene.direction
-
+        stopsign  = PScene.stop_trigger
+        stopsign= True ## Eeddid otu when this works
         if(self.deviation > 20):
             lancorrect = True
         else:
             lancorrect = False
         state_map = {
-            (True, True, False, False,False): 'OBJECT_AND_SIGN_TRIGGER',
-            (True, True, False, False, False): 'OBJECT_TRIGGER',
-            (True, True, False, False, False): 'SIGN_TRIGGER',
-            (False, False, True, False, False): 'INTERSECTION_TRIGGER',
-            (False, False, True, False, True): 'INTERSECTION_TRIGGER',
-            (True, True, False, False, False): 'TRAFFIC_LIGHT_TRIGGER',
-            (True, True, False, False, False): 'NO_TRIGGER',
-            (True, True, False, False, True): 'LANE_CORRECTION',
-            (True, True, False, False, False): 'OBJECT_AND_INTERSECTION_TRIGGER',
+            (True, True, False, False,False,False): 'OBJECT_AND_SIGN_TRIGGER',
+            (True, True, False, False, False,False): 'OBJECT_TRIGGER',
+            (True, True, False, False, False,False): 'SIGN_TRIGGER',
+            (False, False, True, False, False,False): 'INTERSECTION_TRIGGER',
+            (False, False, True, False, False,True): 'INTERSECTION AND STOP SIGN',
+            (True, True, False, False, False,False): 'TRAFFIC_LIGHT_TRIGGER',
+            (True, True, False, False, False,False): 'NO_TRIGGER',
+            (True, True, False, False, True,False): 'LANE_CORRECTION',
+            (True, True, False, False, False,False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
-        print(state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect)))
-        self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect))
+        #print(state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect)))
+        self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign))
 
         # Update instance variables for the seven triggers
         self.break_trigger = 0
@@ -138,6 +140,16 @@ class Brain:
             self.acceleration = False
             self.intersection = False
             self.override = False
+        elif self.state == 'INTERSECTION AND STOP SIGN':
+            self.break_trigger = True
+            self.road_search = False
+            self.switch_lane = False
+            self.parking = False
+            self.lane_follow = True
+            self.acceleration = False
+            self.intersection = False
+            self.override = False
+            self.intersection = "stopstraight"
         # Do something when no triggers are activated
         # ...
         # Return array of seven triggers

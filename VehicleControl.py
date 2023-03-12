@@ -87,7 +87,9 @@ class vehiclecontrol:
             self.turn_left()
 
             self.current_direction = 'left'
-
+        elif trigger == 'stopstraight':
+            self.stopstraight()
+            self.current_direction = 'stopstraight'
         elif trigger == 'right':
             self.turn_right()
             self.current_direction = 'right'
@@ -96,6 +98,11 @@ class vehiclecontrol:
             self.current_direction = 'straight'
         else:
             print(f"Invalid trigger: {trigger}")
+    def stopstraight(self):
+        self.steeringcommands = [(0, 0, 0)]
+        self.velocommands = [(.0, 0, 2),(.2, 4 , 1),(.3, 0, 0)]
+        print("Turning left")
+
     def turn_left(self):
         self.steeringcommands = [(0, 0, 2), (-23, 2, 1), (0, 6.5, 0)]
         self.velocommands = [(.3, 0, 0)]
