@@ -47,6 +47,7 @@ class PScene:
         self.priority_trigger = False
         self.signs = []
 
+        self.nolane = False
 
 
 
@@ -62,9 +63,12 @@ class PScene:
             print("An error occurred:", e)
         try:
             self.intersectiondetection()
-            self.lane_detection()
         except:
             print("ERROR IN Intersection ")
+        try:
+            self.lane_detection()
+        except:
+            print("lanedetectionfailure")
     def runobjectdetection(self):
 
             # Wait for a coherent pair of frames: depth and color
@@ -248,6 +252,7 @@ class PScene:
             except:
                 self.deviation = 0
                 self.direction = "straight"
+                self.nolane = True
                 print("No lanes found")
             return deviation,direction
 

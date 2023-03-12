@@ -15,7 +15,7 @@ def init(ser,DEBUG_MODE = False):
     global starttime
 
     starttime = time.time()
-    camera_resolutionx = 320
+    camera_resolutionx = 424
     camera_resolutiony = 240
     global xm_per_pix
     global ym_per_pix
