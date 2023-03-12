@@ -24,13 +24,13 @@ maxsteering = 23
 global minsteering
 minsteering = -23
 global maxspeed
-maxspeed = .3
+maxspeed = 1.0 # 1m/s max speed
 global minspeed
-minspeed = -.3
+minspeed = -0.18 # 0.18m/s min speed
 global lastangle 
 lastangle = 0
 global steeringadjustment
-steeringadjustment = -3
+steeringadjustment = -3 # Adjustment for steering misalignment. Positive is right, negative is left
 
 
 
@@ -48,7 +48,8 @@ def perform_steering_write(command, delay,listitem, ser):
     if(DEBUG_MODE):
         print(f"{time.time():.3f} - Delaying for {delay:.3f} seconds...")
         print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
-    command = f"#2:{round(command+steeringadjustment, 5)};;\r\n".encode()
+    command = check_angle(command+steeringadjustment)
+    command = f"#2:{round(command, 5)};;\r\n".encode()
     ser.write(command)
 
     if not listitem:

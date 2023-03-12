@@ -10,7 +10,6 @@ class vehiclecontrol:
         self.prev_error = 0
 
         self.ser = ser
-        self.accelrate = 0
         self.preverrors = (0,0)
         self.steeringcommands  = []
         self.velocommands = []
@@ -48,8 +47,8 @@ class vehiclecontrol:
         # Do something when no trigger is activated
         # ...
         # send velocity to very slow and steering to center
-        self.velocommands = [(.18,0, 0)]
-        self.steeringcommands = [(0,0, 0)]
+        self.velocommands = [(.18,0, 0)] #velocity commands are (velocity, time, mode)
+        self.steeringcommands = [(0,0, 0)] #steering commands are (angle, time, mode)
         pass
 
     def flush(self):
@@ -58,16 +57,15 @@ class vehiclecontrol:
 
 
     def break_execution(self):
+        
+        ## FLUSH SERIAL SEND 0 TO CASH
+        self.ser.flush()
         # Get break trigger value from brain object
         self.breaktrigger = True
         self.steeringcommands = [(0, 0, 0)]
         self.velocommands = [(0, 0, 0)]
-        ## FLUSH SERIAL SEND 0 TO CASH
-        self.ser.flush()
-
 
         self.velorate = 0
-        self.acceleration = 100
         self.steering = 0
 
         #break_trigger = self.brain.break_trigger
@@ -95,14 +93,14 @@ class vehiclecontrol:
         else:
             print(f"Invalid trigger: {trigger}")
     def turn_left(self):
-        self.steeringcommands = [(0, 0, 2), (-18, 2, 1), (0, 7, 0)]
+        self.steeringcommands = [(0, 0, 2), (-23, 2, 1), (0, 7, 0)]
         self.velocommands = [(.2, 0, 0)]
         print("Turning left")
 
     def turn_right(self):
-        self.steeringcommands = [(0, 0, 2), (18, 2, 1), (0, 5, 0)]
+        self.steeringcommands = [(0, 0, 2), (23+3, 2, 1), (0, 5, 0)] #+3 for steeringadjustment of -3 deg
         self.velorate = 0.3
-        print("Turning left")
+        print("Turning right")
 
     def go_straight(self):
         print("Going straight")
@@ -112,7 +110,7 @@ class vehiclecontrol:
         self.ser.flush()
 
         # stay and correct to center of Lane
-        Kp = 1 # Proportional gain
+        Kp = 0.1 # Proportional gain
         Kd = 0.2  # Derivative gain
 
         # Define initial error and derivative of error
