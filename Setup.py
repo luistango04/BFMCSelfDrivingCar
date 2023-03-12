@@ -7,7 +7,7 @@ import usb.core           #Import for the USB library
 import usb.core           #Import for the USB library
 import usb.util           #Import for the USB library
 global DEBUG_MODE
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 def init(ser,DEBUG_MODE = False):
     global camera_resolutionx

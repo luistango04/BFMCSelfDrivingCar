@@ -48,13 +48,15 @@ Actuation = Actuation.Actuation(vehiclecontrol, ser)
 
 start_time = time.time()
 iter = 1
+carspeed = .2
+command = f"#1:{carspeed};;\r\n".encode()
+ser.write(command)
 try:
     while True:
-        carspeed = .3
-        command = f"#1:{carspeed};;\r\n".encode()
+
 
         # print("PRINTED: " + str(command) + " To console")
-        ser.write(command)
+
         # print("SENSING")
         Sense.senseall()
         # cv2.imshow("TEST",Sense.colorframe)\
