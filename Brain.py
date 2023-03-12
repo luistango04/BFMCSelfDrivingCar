@@ -26,10 +26,10 @@ class Brain:
         intersection_trigger = PScene.intersection_trigger
         traffic_light_trigger = PScene.traffic_light_trigger
         self.deviation = PScene.deviation
-        self.direction = PScene.direction
+        print(self.deviation)
         stopsign  = PScene.stop_trigger
-        stopsign= True ## Eeddid otu when this works
-        if(self.deviation > 20):
+        #stopsign= True ## Eeddid otu when this works
+        if(abs(self.deviation) > 20):
             lancorrect = True
         else:
             lancorrect = False
@@ -41,7 +41,8 @@ class Brain:
             (False, False, True, False, False,True): 'INTERSECTION AND STOP SIGN',
             (True, True, False, False, False,False): 'TRAFFIC_LIGHT_TRIGGER',
             (True, True, False, False, False,False): 'NO_TRIGGER',
-            (True, True, False, False, True,False): 'LANE_CORRECTION',
+            (False, False, False, False, True,False): 'LANE_CORRECTION',
+
             (True, True, False, False, False,False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
         #print(state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect)))
@@ -132,11 +133,11 @@ class Brain:
             self.intersection = False
             self.override = True
         elif self.state == 'LANE_CORRECTION':
-            self.break_trigger = True
+            self.break_trigger = False
             self.road_search = False
             self.switch_lane = False
             self.parking = False
-            self.lane_follow = True
+            self.lane_follow = self.deviation
             self.acceleration = False
             self.intersection = False
             self.override = False

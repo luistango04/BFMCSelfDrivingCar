@@ -66,7 +66,7 @@ def perform_drive_write(command, delay,listitem,actuation, ser):
     actuation.velocitystatus = False
     # Wait for the specified delay
     expected_time = time.time() + delay
-    global steeringfree
+
 
 
     time.sleep(delay)
@@ -135,7 +135,7 @@ class Act:
 
         # Initialize the current speed with the last recorded speed#
         commands = self.velocommands
-        velofree  = False
+
         for command, delay,listitem in commands:
             serial_thread = threading.Thread(target=perform_drive_write, args=(command, delay,listitem,self, self.ser))
             serial_thread.start()

@@ -12,8 +12,11 @@ import cv2
 import serial
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
 #ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
+if(DEBUG_MODE):
+    ser = Mock()
+else:
+    ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 
-ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 pipeline = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
 ser.flush()
@@ -69,7 +72,8 @@ try:
             print("DEBUG MODE")
             print(Scene)
             print("BRAIN GOT")
-        print(Brain)
+            print(Brain)
+            #time.sleep(2)
 
 
             #cv2.waitKey(5000)

@@ -34,6 +34,8 @@ class vehiclecontrol:
         elif self.brain.parking:
             self.perform_parking()
         elif self.brain.lane_follow:
+            print("Intersection Triggered")
+
             self.lanefollow()
         elif self.brain.acceleration:
             self.accel()
@@ -118,6 +120,7 @@ class vehiclecontrol:
 
     def lanefollow(self):
         ## Flush serial
+        print("IN LANE CORRECTION")
         self.ser.flush()
         error = self.brain.lane_follow/10
         # stay and correct to center of Lane
@@ -136,10 +139,10 @@ class vehiclecontrol:
         self.prev_error = error
         print(error_diff)
         # Calculate steering angle
-        angle = Kp * error + Kd * error_diff
+        angle = -1*Kp * error + Kd * error_diff
         print(angle)
         # Apply steering angle to the vehicle
-        self.steeringcommands = [(angle, 0, 0)]
+        self.steeringcommands = [(angle, 0, 1),(0, .25,0 )]
 
         # speed is lastspeed
         return angle
