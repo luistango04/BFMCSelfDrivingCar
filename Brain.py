@@ -37,7 +37,7 @@ class Brain:
         self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger))
 
         # Update instance variables for the seven triggers
-        self.break_trigger =0
+        self.break_trigger = 0
         self.road_search = 0
         self.switch_lane = 0
         self.parking = 0
