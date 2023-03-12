@@ -7,7 +7,7 @@ import usb.core           #Import for the USB library
 import usb.core           #Import for the USB library
 import usb.util           #Import for the USB library
 global DEBUG_MODE
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 def init(ser,DEBUG_MODE = False):
     global camera_resolutionx
@@ -41,35 +41,35 @@ def init(ser,DEBUG_MODE = False):
 
 def camerainit(camera_resolutionx, camera_resolutiony):
 
-    #Part to reset/reattach camera connection through software
-    #Find the device
-    # try:
-    #     dev = usb.core.find(idVendor=0x8086, idProduct=0x0b3a) #Intel D435i
-    #
-    #     #If the device is found, reset its USB connection
-    #     if dev is not None:
-    #         try:
-    #             #Detach the device from the kernel driver
-    #             if dev.is_kernel_driver_active(0):
-    #                 dev.detach_kernel_driver(0)
-    #
-    #             #Reset the device
-    #             dev.reset()
-    #
-    #             #Reattach the device to the kernel driver
-    #             usb.util.dispose_resources(dev)
-    #             dev.attach_kernel_driver(0)
-    #
-    #         #If there is an error, print it
-    #         except usb.core.USBError as e:
-    #             print("USBError: {}".format(str(e)))
-    #
-    #     #If the device is not found, print an error message
-    #     else:
-    #         print("USB device not found")
-    # except:
-    #     if DEBUG_MODE:
-    #         return _generate_dummy_pipeline()
+#    Part to reset/reattach camera connection through software
+  #  Find the device
+  #   try:
+  #       dev = usb.core.find(idVendor=0x8086, idProduct=0x0b3a) #Intel D435i
+  #
+  #       #If the device is found, reset its USB connection
+  #       if dev is not None:
+  #           try:
+  #               #Detach the device from the kernel driver
+  #               if dev.is_kernel_driver_active(0):
+  #                   dev.detach_kernel_driver(0)
+  #
+  #               #Reset the device
+  #               dev.reset()
+  #
+  #               #Reattach the device to the kernel driver
+  #               usb.util.dispose_resources(dev)
+  #               dev.attach_kernel_driver(0)
+  #
+  #           #If there is an error, print it
+  #           except usb.core.USBError as e:
+  #               print("USBError: {}".format(str(e)))
+  #
+  #       #If the device is not found, print an error message
+  #       else:
+  #           print("USB device not found")
+  #   except:
+  #       if DEBUG_MODE:
+  #           return _generate_dummy_pipeline()
     time.sleep(2)
 
 

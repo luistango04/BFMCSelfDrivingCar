@@ -164,7 +164,7 @@ class PScene:
                 # plt.plot(hist)
                 # plt.show()
                 #print(highest_peak_y)
-                if (highest_peak_y > 25000):
+                if (highest_peak_y > 30000):
                     ##print xlocation and message that intersection has been found.
                     #print("intersectionfound")
                     print("Location:" + str(highest_peak_x) + " above birds eye view need to calibrate")

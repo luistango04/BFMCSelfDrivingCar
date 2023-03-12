@@ -35,7 +35,8 @@ steeringadjustment = -3 # Adjustment for steering misalignment. Positive is righ
 
 
 # Define a function to perform the serial write operation
-def perform_steering_write(command, delay,listitem, ser):
+def perform_steering_write(command, delay,listitem, actuation, ser):
+    actuation.steeringstatus = False
     # Wait for the specified delay
     expected_time = time.time() + delay
     global steeringfree
@@ -45,33 +46,37 @@ def perform_steering_write(command, delay,listitem, ser):
 
     actual_time = time.time()
 
-    if(DEBUG_MODE):
-        print(f"{time.time():.3f} - Delaying for {delay:.3f} seconds...")
-        print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
+
     command = check_angle(command+steeringadjustment)
     command = f"#2:{round(command, 5)};;\r\n".encode()
+    if (DEBUG_MODE):
+        print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
+        print(command)
     ser.write(command)
 
     if not listitem:
 
-        steeringfree = True
+        actuation.steeringstatus =  True
 
     else:
         steeringfree = False
     update_bothfree()
 
-def perform_drive_write(command, delay,listitem, ser):
+def perform_drive_write(command, delay,listitem,actuation, ser):
     # Wait for the specified delay
     global velofree
     expected_time = time.time() + delay
 
     print(f"{time.time():.3f} - Delaying for {delay:.3f} seconds...")
-    time.sleep(delay)
+#    time.sleep(delay)
 
     actual_time = time.time()
-    print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
+#    print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
 
     command = f"#1:{round(command, 5)};;\r\n".encode()
+    if (DEBUG_MODE):
+        print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
+        print(command)
     ser.write(command)
 
     if not listitem:
@@ -83,12 +88,14 @@ def perform_drive_write(command, delay,listitem, ser):
         velofree = False
         update_bothfree()
     update_bothfree()
-class Actuation:
+class Act:
     def __init__(self,VehicleControl,ser = Mock()):
         self.steeringcommands = VehicleControl.steeringcommands
         self.velocommands = VehicleControl.velocommands
         self.ser = ser
         self.write_thread = None
+        self.steeringstatus = True
+        self.velocitystatus = True
 
 
 
@@ -130,7 +137,7 @@ class Actuation:
         commands = self.velocommands
         velofree  = False
         for command, delay,listitem in commands:
-            serial_thread = threading.Thread(target=perform_drive_write, args=(command, delay,listitem, self.ser))
+            serial_thread = threading.Thread(target=perform_drive_write, args=(command, delay,listitem,self, self.ser))
             serial_thread.start()
 
         # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
@@ -143,9 +150,9 @@ class Actuation:
 
         """
         commands = self.steeringcommands
-        steeringfree = False
+
         for command, delay,listitem in commands:
-            serial_thread = threading.Thread(target=perform_steering_write, args=(command, delay,listitem, self.ser))
+            serial_thread = threading.Thread(target=perform_steering_write, args=(command, delay,listitem,self, self.ser))
             serial_thread.start()
             # Store a reference to the current write thread
 

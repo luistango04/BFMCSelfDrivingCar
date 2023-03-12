@@ -35,7 +35,7 @@ class Brain:
             (True, True, False, False,False): 'OBJECT_AND_SIGN_TRIGGER',
             (True, True, False, False, False): 'OBJECT_TRIGGER',
             (True, True, False, False, False): 'SIGN_TRIGGER',
-            (True, True, False, False, False): 'INTERSECTION_TRIGGER',
+            (False, False, True, False, False): 'INTERSECTION_TRIGGER',
             (True, True, False, False, False): 'TRAFFIC_LIGHT_TRIGGER',
             (True, True, False, False, False): 'NO_TRIGGER',
             (True, True, False, False, True): 'LANE_CORRECTION',

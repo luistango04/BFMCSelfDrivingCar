@@ -11,9 +11,9 @@ import Actuation
 import cv2
 import serial
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
-#ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
+ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
 
-ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+#ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
 pipeline = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
 ser.flush()
@@ -44,7 +44,7 @@ time.sleep(1)  # Give time to fire up camera birghtness
 Scene = PScene(Sense)
 Brain = Brain(Scene)
 vehiclecontrol = vehiclecontrol(Brain, ser, Sense)
-Actuation = Actuation.Actuation(vehiclecontrol, ser)
+Act = Actuation.Act(vehiclecontrol, ser)
 
 start_time = time.time()
 iter = 1
@@ -55,7 +55,7 @@ try:
     while True:
 
 
-        # print("PRINTED: " + str(command) + " To console")
+        print("PRINTED: " + str(Act.steeringstatus) + " To console")
 
         # print("SENSING")
         Sense.senseall()
@@ -72,15 +72,16 @@ try:
             print(Brain)
 
 
-            cv2.waitKey(5000)
+            #cv2.waitKey(5000)
 
         # time.sleep(2)
-        if (not (bothfree) and Brain.override == False):
+        if (not (Act.steeringstatus) and Brain.override == False):
+            print("carnotready")
             pass
         else:
-
+            print("carready")
             vehiclecontrol.updatefrombrainscene(Brain, Sense)
-            Actuation.update(vehiclecontrol)
+            Act.update(vehiclecontrol)
 
         #
         #   cv2.waitKey(10000)

@@ -38,6 +38,7 @@ class vehiclecontrol:
         elif self.brain.acceleration:
             self.accel()
         elif self.brain.intersection:
+            print("Intersection Triggered")
             self.intersectionmanagement()
         else:
             self.default_action()
@@ -93,7 +94,7 @@ class vehiclecontrol:
         else:
             print(f"Invalid trigger: {trigger}")
     def turn_left(self):
-        self.steeringcommands = [(0, 0, 2), (-23, 2, 1), (0, 7, 0)]
+        self.steeringcommands = [(0, 0, 2), (-23, 2, 1), (0, 8, 0)]
         self.velocommands = [(.2, 0, 0)]
         print("Turning left")
 
