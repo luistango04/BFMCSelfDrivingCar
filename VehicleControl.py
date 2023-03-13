@@ -139,7 +139,7 @@ class vehiclecontrol:
         self.prev_error = error
         print(error_diff)
         # Calculate steering angle
-        angle = -1*Kp * error + Kd * error_diff
+        angle =Kp * error + Kd * error_diff
         print(angle)
         # Apply steering angle to the vehicle
         self.steeringcommands = [(angle, 0, 1),(0, .25,0 )]
