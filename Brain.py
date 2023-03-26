@@ -16,8 +16,10 @@ class Brain:
         self.intersection = False
         self.override = False ## EMERGENCY FLAG
         self.deviation = PScene.deviation
+        self.distancetocar = PScene.distancetocar
         self.direction = PScene.direction
         self.stop_trigger = False
+        self.targetdistance = 400
 
 
     def update(self, PScene):
@@ -26,27 +28,37 @@ class Brain:
         intersection_trigger = PScene.intersection_trigger
         traffic_light_trigger = PScene.traffic_light_trigger
         self.deviation = PScene.deviation
-        print(self.deviation)
+        self.distancetocar = PScene.distancetocar
+
         stopsign  = PScene.stop_trigger
         #stopsign= True ## Eeddid otu when this works
         if(abs(self.deviation) > 20):
             lancorrect = True
         else:
             lancorrect = False
-        state_map = {
-            (True, True, False, False,False,False): 'OBJECT_AND_SIGN_TRIGGER',
-            (True, True, False, False, False,False): 'OBJECT_TRIGGER',
-            (True, True, False, False, False,False): 'SIGN_TRIGGER',
-            (False, False, True, False, False,False): 'INTERSECTION_TRIGGER',
-            (False, False, True, False, False,True): 'INTERSECTION AND STOP SIGN',
-            (True, True, False, False, False,False): 'TRAFFIC_LIGHT_TRIGGER',
-            (True, True, False, False, False,False): 'NO_TRIGGER',
-            (False, False, False, False, True,False): 'LANE_CORRECTION',
+        if(self.distancetocar ):
+            print("Car far away")
+            cruisecontrol = True
+        else:
+            print("No Car detected")
+            cruisecontrol = True
 
-            (True, True, False, False, False,False): 'OBJECT_AND_INTERSECTION_TRIGGER',
+
+        state_map = {
+            (True, True, False, False,False,False,False): 'OBJECT_AND_SIGN_TRIGGER',
+            (True, True, False, False, False,False,False): 'OBJECT_TRIGGER',
+            (True, True, False, False, False,False,False): 'SIGN_TRIGGER',
+            (False, False, True, False, False,False,False): 'INTERSECTION_TRIGGER',
+            (False, False, True, False, False,True,True): 'INTERSECTION AND STOP SIGN',
+            (True, True, False, False, False,False,False): 'TRAFFIC_LIGHT_TRIGGER',
+            (True, True, False, False, False,False,False): 'NO_TRIGGER',
+            (False, False, False, False, True,False,False): 'LANE_CORRECTION',
+            (False, False, False, False, False, False, True): 'CRUISECONTROL',
+
+            (True, True, False, False, False,False,False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
         #print(state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect)))
-        self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign))
+        self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign,cruisecontrol))
 
         # Update instance variables for the seven triggers
         self.break_trigger = 0
@@ -60,97 +72,7 @@ class Brain:
 
     def perform_action(self):
         # Perform actions based on state
-        if self.state == 'OBJECT_AND_SIGN_TRIGGER':
-            self.break_trigger = False
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = False
-            self.acceleration = False
-            self.intersection = False
-        # Do something when both object and sign triggers are activated
-        # ...
-        elif self.state == 'OBJECT_TRIGGER':
-            self.break_trigger = True
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = False
-            self.acceleration = False
-            self.intersection = False
-            self.override = True
-        # Do something when only object trigger is activated
-        # ...
-        elif self.state == 'SIGN_TRIGGER':
-            self.break_trigger = False
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = False
-            self.acceleration = False
-            self.intersection = False
-        # Do something when only sign trigger is activated
-        # ...
-        elif self.state == 'INTERSECTION_TRIGGER':
-            self.break_trigger = False
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = False
-            self.acceleration = False
-            ## READ INSTRUCTIONS OTHERWISE LEFT
-            self.intersection = "right"
 
-        # Do something when intersection trigger is activated
-        # ...
-        elif self.state == 'TRAFFIC_LIGHT_TRIGGER':
-            self.break_trigger = False
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = False
-            self.acceleration = False
-            self.intersection = False
-        # Do something when traffic light trigger is activated
-        # ...
-        elif self.state == 'NO_TRIGGER':
-            self.break_trigger = False
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = self.deviation
-            self.acceleration = False
-            self.intersection = False
-        # Do something when no triggers are activated
-        # ...
-        elif self.state == 'OBJECT_AND_INTERSECTION_TRIGGER':
-            self.break_trigger = True
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = False
-            self.acceleration = False
-            self.intersection = False
-            self.override = True
-        elif self.state == 'LANE_CORRECTION':
-            self.break_trigger = False
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = self.deviation
-            self.acceleration = False
-            self.intersection = False
-            self.override = False
-        elif self.state == 'INTERSECTION AND STOP SIGN':
-            self.break_trigger = True
-            self.road_search = False
-            self.switch_lane = False
-            self.parking = False
-            self.lane_follow = True
-            self.acceleration = False
-            self.intersection = False
-            self.override = False
-            self.intersection = "stopstraight"
         # Do something when no triggers are activated
         # ...
         # Return array of seven triggers
@@ -169,6 +91,8 @@ class Brain:
                f"Acceleration: {self.acceleration}\n" + \
                f"Deviation: {self.deviation}\n" + \
                f"Direction: {self.direction}\n" + \
+               f"Distancetocar: {self.distancetocar}\n" + \
+               f"Target: {self.targetdistance}\n" + \
                f"Intersection: {self.intersection}\n"
 
 

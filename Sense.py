@@ -11,6 +11,8 @@ diameterofwheel = 65
 
 class SensingInput:
     def __init__(self,ser,pipeline, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
+        self.camera_resolutionx = Setup.camera_resolutionx
+        self.camera_resolutiony = Setup.camera_resolutiony
         self.pipeline = pipeline ##
         self.colorframe = 0
         self.ser = ser
@@ -18,10 +20,12 @@ class SensingInput:
         self.gyro = 0
         self.velo = 0
         self.tilt = 0
+
         self.counter = 1
         self.imu =  0   ## 0 is no imu 1 is imu
         self.depth_image = 0
         self.errorhandle = [] ##[intellisense, gps, imu, v2v, bno] #error handle
+
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
         try:
@@ -101,12 +105,18 @@ class SensingInput:
 
 
     def senseall(self):  # runs through all methods to refresh the senses. ## returns bit to sendto debug layer
-        try:
+        #try:
             self.Intellsensor()
+
             self.velocity()
+            center_x = self.camera_resolutionx // 2
+            center_y = self.camera_resolutiony // 2
+
+
+            self.distancetocar = int(self.depth_image[center_x, center_y])
 
             return  1
-        except:
+        #except:
             return 0
 
     def get_COLORFRAME(self):

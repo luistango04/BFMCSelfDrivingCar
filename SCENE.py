@@ -47,6 +47,7 @@ class PScene:
         self.priority_trigger = False
         self.signs = []
 
+
         self.nolane = False
 
 
@@ -67,6 +68,7 @@ class PScene:
             #print("ERROR IN Intersection ")
         # try:
             self.deviation,self.direction = (self.lane_detection())
+            self.distancetocar()
         # except:
             #print("lanedetectionfailure")
     def runobjectdetection(self):
@@ -119,10 +121,12 @@ class PScene:
                      ## priority 6
             return 1
 
+    def distancetocar(self):
+        center_x = self.camera_resolutionx // 2
+        center_y = self.camera_resolutiony // 2
 
-
-
-
+        self.distancetocar = int(self.SensingInput.depth_image[center_x, center_y])
+        return self.distancetocar
     def intersectiondetection(self):
 
 

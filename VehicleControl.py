@@ -21,25 +21,41 @@ class vehiclecontrol:
         self.control()
 
 
+    def cruisecontrol(self):
+        variablehandler = self.brain.cardistance - self.brain.target
+
+        curspeed = self.Sensinginput.velo
+       ## what
+
+        self.steeringcommands = []
+        self.velocommands = [(variablehandler, 0, 0)]
+        lanefollow()
+
+        pass
 
     def control(self):
         # Check each instance variable and perform actions
-        if self.brain.break_trigger:
+        if self.brain.state == 'OBJECT_AND_SIGN_TRIGGER':
             self.break_execution()
-        elif self.brain.road_search:
+        elif self.brain.state == 'OBJECT_TRIGGER':
             #self.brain.perform_road_search()
             pass
-        elif self.brain.switch_lane:
+        elif self.brain.state == 'SIGN_TRIGGER':
             self.perform_lane_switch()
-        elif self.brain.parking:
+        elif self.brain.state == 'INTERSECTION_TRIGGER':
             self.perform_parking()
-        elif self.brain.lane_follow:
+        elif self.brain.state == 'INTERSECTION AND STOP SIGN':
             print("lane follow Triggered")
 
             self.lanefollow()
-        elif self.brain.acceleration:
+
+        elif self.brain.state == 'TRAFFIC_LIGHT_TRIGGER':
             self.accel()
-        elif self.brain.intersection:
+        elif self.brain.state == 'CRUISECONTROL':
+            self.cruisecontrol()
+        elif self.brain.state == 'OBJECT_AND_INTERSECTION_TRIGGER':
+            self.cruisecontrol()
+        elif self.brain.state == 'NO_TRIGGER':
             print("Intersection Triggered")
             self.intersectionmanagement()
         else:
@@ -75,11 +91,7 @@ class vehiclecontrol:
         #break_trigger = self.brain.break_trigger
 
         # Execute break function based on trigger value
-    def accel(self,rate = .1):
 
-          self.steeringcommands = [(0, 0, 0)]
-          self.velocommands = [(self.accelrate, 0, 0)]
-          print("Accelerating")
 
     def intersectionmanagement(self):
         self.ser.flush()

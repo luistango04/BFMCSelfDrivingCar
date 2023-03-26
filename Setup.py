@@ -6,7 +6,7 @@ global DEBUG_MODE
 global JETSON_MODE
 global NAZRUL_MODE
 DEBUG_MODE = True
-JETSON_MODE = False
+JETSON_MODE = True
 NAZRUL_MODE = False
 
 if JETSON_MODE:
