@@ -1,15 +1,22 @@
 import time
 import cv2
 import numpy as np
-import pyrealsense2 as rs
-import pyrealsense2 as rs #Why are there two imports of the same library??
-import usb.core           #Import for the USB library
-import usb.core           #Import for the USB library
-import usb.util           #Import for the USB library
+
 global DEBUG_MODE
+global JETSON_MODE
+global NAZRUL_MODE
 DEBUG_MODE = True
+JETSON_MODE = False
+NAZRUL_MODE = False
+
+if JETSON_MODE:
+    import pyrealsense2 as rs
+    import usb.core  # Import for the USB library
+    import usb.core  # Import for the USB library
+    import usb.util  # Import for the USB library
 
 def init(ser,DEBUG_MODE = False):
+    pipeline = []
     global camera_resolutionx
     global camera_resolutiony
     global starttime
@@ -33,8 +40,10 @@ def init(ser,DEBUG_MODE = False):
     starttime = time.time()  ## PROGRAM START
     ## RUN THIS TO DO SET SENSOR
 
-    pipeline = camerainit(camera_resolutionx, camera_resolutiony)
-    yolo = Load_Yolo_model()
+    if JETSON_MODE:
+        pipeline = camerainit(camera_resolutionx, camera_resolutiony)
+    if NAZRUL_MODE:
+        yolo = Load_Yolo_model()
     pidcarsetting(kp,ki,kd,k_t,ser)
     time.sleep(1)
     return pipeline
@@ -75,6 +84,7 @@ def camerainit(camera_resolutionx, camera_resolutiony):
   #       if DEBUG_MODE:
   #           return _generate_dummy_pipeline()
     time.sleep(2)
+
 
 
     # Configure depth and color streams

@@ -1,6 +1,8 @@
 import Setup
-from Setup import DEBUG_MODE
+from Setup import DEBUG_MODE, JETSON_MODE,NAZRUL_MODE
 from Sense import SensingInput
+
+
 from unittest.mock import Mock
 from SCENE import PScene
 import time
@@ -64,7 +66,8 @@ try:
         Sense.senseall()
         # cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
-        Scene.makeascene()
+        if(JETSON_MODE):
+            Scene.makeascene()
    
         Brain.update(Scene)
         Brain.perform_action()  ## THINK

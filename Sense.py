@@ -1,9 +1,7 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import pyrealsense2 as rs
 import Setup
-from NazrulDependencies.helper_functions import postprocess_boxes
 
 
 global diameterofwheel 
@@ -150,7 +148,7 @@ class SensingInput:
         return self.BNO_POS
 
     def gyro_data(gyro):
-    return np.asarray([gyro.x, gyro.y, gyro.z])
+        return np.asarray([gyro.x, gyro.y, gyro.z])
     def Nazrulsobjectdetection(self):
         colorframe = self.colorframe
         depthframe = self.depth_image

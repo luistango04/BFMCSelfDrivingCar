@@ -59,7 +59,8 @@ def perform_steering_write(command, delay,listitem, actuation, ser):
         actuation.steeringstatus =  True
 
     else:
-        steeringfree = False
+        actuation.steeringstatus = False
+
     update_bothfree()
 
 def perform_drive_write(command, delay,listitem,actuation, ser):
@@ -160,10 +161,10 @@ class Act:
             # Wait for the serial write thread to finish
         if not listitem:
 
-            actuation.steeringstatus = True
+            self.steeringstatus = True
 
         else:
-            actuation.steeringstatus  = False
+            self.steeringstatus  = False
         update_bothfree()
 
         # If the current angle is equal to the target steering angle, return 1
