@@ -11,9 +11,9 @@ NAZRUL_MODE = False
 
 if JETSON_MODE:
     import pyrealsense2 as rs
-    import usb.core  # Import for the USB library
-    import usb.core  # Import for the USB library
-    import usb.util  # Import for the USB library
+    #import usb.core  # Import for the USB library
+    #import usb.core  # Import for the USB library
+    #import usb.util  # Import for the USB library
 
 def init(ser,DEBUG_MODE = False):
     pipeline = []

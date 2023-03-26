@@ -15,6 +15,9 @@ import cv2
 import serial
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
 
+global SetDistance
+SetDistance = 600
+
 if(DEBUG_MODE):
     ser = Mock()
 else:
@@ -77,11 +80,12 @@ try:
             print(Scene)
             print("BRAIN GOT")
             print(Brain)
+            print("Speed",vehiclecontrol.velocommands)
             time.sleep(2)
 
 
 
-            cv2.waitKey(5000)
+            #cv2.waitKey(5000)
 
         # time.sleep(2)
         if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):
@@ -97,7 +101,7 @@ try:
         # Scene.lane_detection()
         # test the FPS of the processor object
 
-        # cv2.waitKey(5000)
+        cv2.waitKey(500)
         iter = iter + 1
         pass
 

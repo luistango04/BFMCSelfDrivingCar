@@ -1,7 +1,6 @@
 
 
 
-
 class vehiclecontrol:
 
     def __init__(self, brain,ser, Sensinginput = None):
@@ -14,6 +13,7 @@ class vehiclecontrol:
         self.steeringcommands  = []
         self.velocommands = []
         self.steeringcap = [-23,23]
+        self.speed = 0.3
 
     def updatefrombrainscene(self, Brain,PScene):
         self.brain = Brain
@@ -21,22 +21,12 @@ class vehiclecontrol:
         self.control()
 
 
-    def cruisecontrol(self):
-        variablehandler = self.brain.cardistance - self.brain.target
-
-        curspeed = self.Sensinginput.velo
-       ## what
-
-        self.steeringcommands = []
-        self.velocommands = [(variablehandler, 0, 0)]
-        lanefollow()
-
-        pass
+    
 
     def control(self):
         # Check each instance variable and perform actions
         if self.brain.state == 'OBJECT_AND_SIGN_TRIGGER':
-            self.break_execution()
+            self.brake_execution()
         elif self.brain.state == 'OBJECT_TRIGGER':
             #self.brain.perform_road_search()
             pass
@@ -67,7 +57,7 @@ class vehiclecontrol:
         # ...
         # send velocity to very slow and steering to center
         self.ser.flush()
-        self.velocommands = [(.3,0, 0)] #velocity commands are (velocity, time, mode)
+        self.velocommands = [(self.speed,0, 0)] #velocity commands are (velocity, time, mode)
         self.steeringcommands = [(0,0, 0)] #steering commands are (angle, time, mode)
         pass
 
@@ -76,21 +66,21 @@ class vehiclecontrol:
 
 
 
-    def break_execution(self):
+    def brake_execution(self):
         
         ## FLUSH SERIAL SEND 0 TO CASH
         self.ser.flush()
-        # Get break trigger value from brain object
-        self.breaktrigger = True
+        # Get brake trigger value from brain object
+        self.braketrigger = True
         self.steeringcommands = [(0, 0, 0)]
         self.velocommands = [(0, 0, 0)]
 
         self.velorate = 0
         self.steering = 0
 
-        #break_trigger = self.brain.break_trigger
+        #brake_trigger = self.brain.brake_trigger
 
-        # Execute break function based on trigger value
+        # Execute brake function based on trigger value
 
 
     def intersectionmanagement(self):
@@ -155,9 +145,33 @@ class vehiclecontrol:
         print(angle)
         # Apply steering angle to the vehicle
         self.steeringcommands = [(angle, 0, 1),(0, .25,0 )]
-        self.velocommands = [(.3, 0, 0)]
+        self.velocommands = [(self.speed, 0, 0)]
         # speed is lastspeed
         return angle
+    
+    def cruisecontrol(self):
+        if ( self.brain.distancetocar < self.brain.targetdistance ):
+            print("Decreasing speed")
+            if(self.speed >= 0.05):
+                #self.speed = self.Sensinginput.velo - 0.05
+                self.speed = self.speed - 0.05
+            else:
+                self.speed = 0.00
+        elif (self.brain.distancetocar > self.brain.targetdistance):
+            if(self.speed < 0.3):
+                print("Increasing speed")
+                #self.speed = self.Sensinginput.velo + 0.05
+                self.speed = self.speed + 0.05
+            else:
+                print("No change in speed")
+                self.speed = 0.3
+        else:
+            self.speed = self.speed
+
+        self.steeringcommands = []
+        self.velocommands = [(self.speed, 0, 0)]
+        self.lanefollow()
+        pass
 
         # return to cruising speed
 
@@ -165,7 +179,7 @@ class vehiclecontrol:
 
     def __str__(self):
         return f"UNDERCONSTRUCTION"
-        # f"break_signal: {self.break_signal}" \
+        # f"brake_signal: {self.brake_signal}" \
         # f"\nroad_search_signal: {self.road_search_signal}\nswitch_lane_signal: {self.switch_lane_signal}" \
         # f"\nparking_signal: {self.parking_signal}\nlane_following_signal: {self.lane_following_signal}" \
         # f"\nacceleration_signal: {self.acceleration_signal}\nintersection_navigation_signal: {self.intersection_navigation_signal}"

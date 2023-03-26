@@ -122,11 +122,12 @@ class PScene:
             return 1
 
     def distancetocar(self):
-        center_x = self.camera_resolutionx // 2
-        center_y = self.camera_resolutiony // 2
+        center_x = self.camera_resolutionx // 2 - 1
+        center_y = self.camera_resolutiony // 2 - 1
 
         self.distancetocar = int(self.SensingInput.depth_image[center_x, center_y])
         return self.distancetocar
+    
     def intersectiondetection(self):
 
 
