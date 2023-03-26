@@ -7,19 +7,18 @@ class Brain:
             self.update(PScene)
 
         # Initialize instance variables for the seven triggers
-        self.break_trigger = False
+        self.brake_trigger = False
         self.road_search = False
         self.switch_lane = False
         self.parking = False
         self.lane_follow = False
-        self.acceleration = False
         self.intersection = False
         self.override = False ## EMERGENCY FLAG
         self.deviation = PScene.deviation
         self.distancetocar = PScene.distancetocar
         self.direction = PScene.direction
         self.stop_trigger = False
-        self.targetdistance = 400
+        self.targetdistance = 300 ## We need to check this number. It doesn't trigger well on anything larger than 300 :(
 
 
     def update(self, PScene):
@@ -31,7 +30,7 @@ class Brain:
         self.distancetocar = PScene.distancetocar
 
         stopsign  = PScene.stop_trigger
-        #stopsign= True ## Eeddid otu when this works
+        #stopsign= True ## Edit out when this works
         if(abs(self.deviation) > 20):
             lancorrect = True
         else:
@@ -42,7 +41,6 @@ class Brain:
         else:
             print("No Car detected")
             cruisecontrol = True
-
 
         state_map = {
             (True, True, False, False,False,False,False): 'OBJECT_AND_SIGN_TRIGGER',
@@ -61,12 +59,11 @@ class Brain:
         self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign,cruisecontrol))
 
         # Update instance variables for the seven triggers
-        self.break_trigger = 0
+        self.brake_trigger = 0
         self.road_search = 0
         self.switch_lane = 0
         self.parking = 0
         self.lane_follow = 0
-        self.acceleration = 0
         self.intersection = 0
 
 
@@ -76,19 +73,17 @@ class Brain:
         # Do something when no triggers are activated
         # ...
         # Return array of seven triggers
-        return [self.break_trigger, self.road_search, self.switch_lane, self.parking, self.lane_follow, self.acceleration,
-                self.intersection]
+        return [self.brake_trigger, self.road_search, self.switch_lane, self.parking, self.lane_follow,self.intersection]
 
 #    def fetchactivities(self,connectionobject): ## Put planned activities here in brain
 
     def __str__(self):
         return f"Brain state: {self.state}\n" + \
-               f"Break trigger: {self.break_trigger}\n" + \
+               f"Brake trigger: {self.brake_trigger}\n" + \
                f"Road search: {self.road_search}\n" + \
                f"Switch lane: {self.switch_lane}\n" + \
                f"Parking: {self.parking}\n" + \
                f"Lane follow: {self.lane_follow}\n" + \
-               f"Acceleration: {self.acceleration}\n" + \
                f"Deviation: {self.deviation}\n" + \
                f"Direction: {self.direction}\n" + \
                f"Distancetocar: {self.distancetocar}\n" + \
