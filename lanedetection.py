@@ -71,8 +71,8 @@ def plotHistogramintersection(inpImage):
 
     midpoint = np.int64(histogram.shape[0] / 2)
     x = np.arange(0, histogram.shape[0], 1)
-    plt.xlabel("Image X Coordinates")
-    plt.ylabel("Number of White Pixels")
+    #plt.xlabel("Image X Coordinates")
+    #plt.ylabel("Number of White Pixels")
     highest_peak_idx = np.argmax(histogram)
     highest_peak_x = x[highest_peak_idx]
 
@@ -80,7 +80,7 @@ def plotHistogramintersection(inpImage):
     # Get the y-value at the highest peak index
     highest_peak_y = histogram[highest_peak_idx]
 
-    revertthis =  plt.axvline(x=highest_peak_idx, color='r')
+    #revertthis =  plt.axvline(x=highest_peak_idx, color='r')
 
     #get the numpypoints from the plot
     dataline = revertthis.get_data()
@@ -268,8 +268,8 @@ def plotHistogram(inpImage):
     leftxBase = np.argmax(histogram[:midpoint])
     rightxBase = np.argmax(histogram[midpoint:]) + midpoint
 
-    plt.xlabel("Image X Coordinates")
-    plt.ylabel("Number of White Pixels")
+    #plt.xlabel("Image X Coordinates")
+    #plt.ylabel("Number of White Pixels")
 
     # Return histogram and x-coordinates of left & right lanes to calculate
     # lane width in pixels
@@ -360,11 +360,11 @@ def slide_window_search(binary_warped, histogram):
     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
     out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
-    plt.imshow(out_img,extent=[0, 424, 0, 240])
+    #plt.imshow(out_img,extent=[0, 424, 0, 240])
     #plt.plot(left_fitx,  ploty, color = 'yellow')
     #plt.plot(right_fitx, ploty, color = 'yellow')
-    plt.xlim(0, 1280)
-    plt.ylim(720, 0)
+    #plt.xlim(0, 1280)
+    #plt.ylim(720, 0)
 
     return ploty, left_fit, right_fit, ltx, rtx
 #### END - APPLY SLIDING WINDOW METHOD TO DETECT CURVES ########################
@@ -427,8 +427,8 @@ def general_search(binary_warped, left_fit, right_fit):
 
     # plt.plot(left_fitx,  ploty, color = 'yellow')
     # plt.plot(right_fitx, ploty, color = 'yellow')
-    plt.xlim(0, 1280)
-    plt.ylim(720, 0)
+    #plt.xlim(0, 1280)
+    #plt.ylim(720, 0)
 
 
     ret = {}
@@ -502,7 +502,7 @@ def draw_lane_lines(original_image, warped_image, Minv, draw_info):
 
 
     # Plot the x and y coordinates
-    plt.plot(x_coords, y_coords)
+    #plt.plot(x_coords, y_coords)
     #plt.show()
     # Show the plot
 
