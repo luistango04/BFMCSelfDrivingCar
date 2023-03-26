@@ -11,6 +11,7 @@ import pyrosbag as pb
 
 
 
+from Setup import JETSON_MODE
 
 
 import cv2
@@ -18,6 +19,8 @@ import numpy as np
 import os
 from scipy import optimize
 from matplotlib import pyplot as plt, cm, colors
+if JETSON_MODE:
+    import pyrealsense2 as rs
 
 camera_resolutionx = 424
 camera_resolutiony = 240
@@ -582,7 +585,8 @@ def addText(img, radius, direction, deviation, devDirection):
 ################################################################################
 import time
 from unittest.mock import Mock
-import pyrealsense2 as rs
+
+
 import Setup
 import argparse
 import Sense
