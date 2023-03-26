@@ -13,7 +13,7 @@ def init(ser,DEBUG_MODE = False):
     global camera_resolutionx
     global camera_resolutiony
     global starttime
-
+    global yolo
     starttime = time.time()
     camera_resolutionx = 424
     camera_resolutiony = 240
@@ -34,14 +34,14 @@ def init(ser,DEBUG_MODE = False):
     ## RUN THIS TO DO SET SENSOR
 
     pipeline = camerainit(camera_resolutionx, camera_resolutiony)
-
+    yolo = Load_Yolo_model()
     pidcarsetting(kp,ki,kd,k_t,ser)
     time.sleep(1)
     return pipeline
 
 
 ## put planned activities connection protocol here : to set up and establish connection
-def setupmqtt():
+# def setupmqtt():
 
 def camerainit(camera_resolutionx, camera_resolutiony):
 
@@ -123,6 +123,49 @@ def pidcarsetting(kp,ki,kd,k_t,ser):
     def __str__(self):
         return f"yaw_rate: {self.yaw_rate}, lateral_acceleration: {self.lateral_acceleration}, longitudinal_acceleration: {self.longitudinal_acceleration}, speed: {self.speed}, steering_wheel_angle: {self.steering_wheel_angle}, steering_wheel_: {self.steering_wheel_velocity}"
 
+
+def Load_Yolo_model():
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if len(gpus) > 0:
+        print(f'GPUs {gpus}')
+        try:
+            tf.config.experimental.set_memory_growth(gpus[0], True)
+        except RuntimeError:
+            pass
+
+    if YOLO_FRAMEWORK == "tf":  # TensorFlow detection
+        if YOLO_TYPE == "yolov4":
+            Darknet_weights = YOLO_V4_TINY_WEIGHTS if TRAIN_YOLO_TINY else YOLO_V4_WEIGHTS
+        if YOLO_TYPE == "yolov3":
+            Darknet_weights = YOLO_V3_TINY_WEIGHTS if TRAIN_YOLO_TINY else YOLO_V3_WEIGHTS
+
+        if YOLO_CUSTOM_WEIGHTS == False:
+            print("Loading Darknet_weights from:", Darknet_weights)
+            yolo = Create_Yolo(input_size=YOLO_INPUT_SIZE, CLASSES=YOLO_COCO_CLASSES)
+            load_yolo_weights(yolo, Darknet_weights)  # use Darknet weights
+        else:
+            checkpoint = f"./checkpoints/{TRAIN_MODEL_NAME}"
+            if TRAIN_YOLO_TINY:
+                checkpoint += "_Tiny"
+            print("Loading custom weights from:", checkpoint)
+            yolo = Create_Yolo(input_size=YOLO_INPUT_SIZE, CLASSES=TRAIN_CLASSES)
+            yolo.load_weights(checkpoint)  # use custom weights
+
+    elif YOLO_FRAMEWORK == "trt":  # TensorRT detection
+        saved_model_loaded = tf.saved_model.load(YOLO_CUSTOM_WEIGHTS, tags=[tag_constants.SERVING])
+        signature_keys = list(saved_model_loaded.signatures.keys())
+        yolo = saved_model_loaded.signatures['serving_default']
+
+    return yolo
+
+    # write srial fucntions to Car
+
+
+    # read serial  back to car
+    return 1
+
+    def __str__(self):
+        return f"yaw_rate: {self.yaw_rate}, lateral_acceleration: {self.lateral_acceleration}, longitudinal_acceleration: {self.longitudinal_acceleration}, speed: {self.speed}, steering_wheel_angle: {self.steering_wheel_angle}, steering_wheel_: {self.steering_wheel_velocity}"
 def _generate_dummy_pipeline():
     class DummyPipeline:
         def start(self, config):

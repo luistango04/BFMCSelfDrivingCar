@@ -11,7 +11,7 @@ import Actuation
 import cv2
 import serial
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
-#ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
+
 if(DEBUG_MODE):
     ser = Mock()
 else:
@@ -73,10 +73,11 @@ try:
             print(Scene)
             print("BRAIN GOT")
             print(Brain)
-            #time.sleep(2)
+            time.sleep(2)
 
 
-            #cv2.waitKey(5000)
+
+            cv2.waitKey(5000)
 
         # time.sleep(2)
         if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):

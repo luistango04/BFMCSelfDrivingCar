@@ -3,11 +3,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pyrealsense2 as rs
 import Setup
-
+from NazrulDependencies.helper_functions import postprocess_boxes
 
 
 global diameterofwheel 
 diameterofwheel = 65
+
+
 
 class SensingInput:
     def __init__(self,ser,pipeline, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
@@ -147,11 +149,24 @@ class SensingInput:
     def get_BNO_POS(self):
         return self.BNO_POS
 
-def gyro_data(gyro):
+    def gyro_data(gyro):
     return np.asarray([gyro.x, gyro.y, gyro.z])
+    def Nazrulsobjectdetection(self):
+        colorframe = self.colorframe
+        depthframe = self.depth_image
+        image_data = image_preprocess(np.copy(colorframe), [input_size, input_size])
+        image_data = image_data[np.newaxis, ...].astype(np.float32)
+        pred_bbox = Yolo.predict(image_data)
+        pred_bbox = [tf.reshape(x, (-1, tf.shape(x)[-1])) for x in pred_bbox]
+        pred_bbox = tf.concat(pred_bbox, axis=0)
+        bboxes = postprocess_boxes(pred_bbox, original_image, input_size, score_threshold)
+        bboxes = nms(bboxes, iou_threshold, method='nms')
+
+        return bboxes, image_data
+
+
 
 
 def accel_data(accel):
     return np.asarray([accel.x, accel.y, accel.z])
-
 
