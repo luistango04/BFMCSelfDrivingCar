@@ -7,7 +7,7 @@ import usb.core           #Import for the USB library
 import usb.core           #Import for the USB library
 import usb.util           #Import for the USB library
 global DEBUG_MODE
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 def init(ser,DEBUG_MODE = False):
     global camera_resolutionx
@@ -38,6 +38,10 @@ def init(ser,DEBUG_MODE = False):
     pidcarsetting(kp,ki,kd,k_t,ser)
     time.sleep(1)
     return pipeline
+
+
+## put planned activities connection protocol here : to set up and establish connection
+def setupmqtt():
 
 def camerainit(camera_resolutionx, camera_resolutiony):
 

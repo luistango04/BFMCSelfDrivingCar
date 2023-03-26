@@ -158,7 +158,13 @@ class Act:
 
 
             # Wait for the serial write thread to finish
+        if not listitem:
 
+            actuation.steeringstatus = True
+
+        else:
+            actuation.steeringstatus  = False
+        update_bothfree()
 
         # If the current angle is equal to the target steering angle, return 1
 

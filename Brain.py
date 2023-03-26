@@ -157,7 +157,7 @@ class Brain:
         return [self.break_trigger, self.road_search, self.switch_lane, self.parking, self.lane_follow, self.acceleration,
                 self.intersection]
 
-
+    def fetchactivities(self,connectionobject): ## Put planned activities here in brain
 
     def __str__(self):
         return f"Brain state: {self.state}\n" + \
