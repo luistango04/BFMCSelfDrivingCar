@@ -14,7 +14,7 @@ class vehiclecontrol:
         self.steeringcommands  = []
         self.velocommands = []
         self.steeringcap = [-23,23]
-
+        self.speed = 0.3
     def updatefrombrainscene(self, Brain,PScene):
         self.brain = Brain
         self.Sensinginput = PScene
