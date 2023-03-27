@@ -54,6 +54,8 @@ class Brain:
             (True, True, False, False, False,False,False): 'NO_TRIGGER',
             (False, False, False, False, True,False,False): 'LANE_CORRECTION',
             (False, False, False, False, False, False, True): 'CRUISECONTROL',
+            (False, False, True, False, True, False, True): 'CRUISECONTROL',
+            (False, False, False, False, True, False, True): 'CRUISECONTROL',
 
             (True, True, False, False, False,False,False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
