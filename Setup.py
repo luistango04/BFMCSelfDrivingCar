@@ -83,7 +83,7 @@ def camerainit(camera_resolutionx, camera_resolutiony):
   #   except:
   #       if DEBUG_MODE:
   #           return _generate_dummy_pipeline()
-    time.sleep(2)
+
 
 
 
@@ -104,6 +104,9 @@ def camerainit(camera_resolutionx, camera_resolutiony):
     #    config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
     # Start streaming
     pipeline.start(config)
+
+
+    time.sleep(2)
     return pipeline
 
 def pidcarsetting(kp,ki,kd,k_t,ser):

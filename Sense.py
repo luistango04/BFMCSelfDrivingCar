@@ -2,7 +2,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import Setup
-
+import pyrealsense2
 
 global diameterofwheel 
 diameterofwheel = 65
@@ -28,14 +28,14 @@ class SensingInput:
 
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
-        try:
+        #try:
             frames = self.pipeline.wait_for_frames()
 
             # Get the depth frame
 
             # Get the depth frame every 5th time
             self.depth_image = frames.get_depth_frame()
-            self.depth_image = np.asanyarray(self.depth_image.get_data())
+            #self.depth_image = np.asanyarray(self.depth_image.get_data())
             self.colorframe = frames.get_color_frame()
             self.colorframe = np.asanyarray(self.colorframe.get_data())
             # Reset the counter
@@ -52,16 +52,16 @@ class SensingInput:
 
             self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
 
-            self.gyro = gyro_data(frames[3].as_motion_frame().get_motion_data())
+            #self.gyro = gyro_data(frames[3].as_motion_frame().get_motion_data())
             #print(self.gyro)
             #print(self.accel)
             # Display the depth image
 
 
-        except:
+        #except:
             self.errorhandle.append(1) ## Returns 1 if intellisense fails to capture frame
             return 0
-        finally:
+        #finally:
             return 1
             # Wait for a key press
 
@@ -111,10 +111,15 @@ class SensingInput:
             self.velocity()
             center_x = self.camera_resolutionx // 2
             center_y = self.camera_resolutiony // 2
-
-
-            self.distancetocar = int(self.depth_image[center_x, center_y])
-
+            #print("ENTERING DEPTH")
+            # if(self.depth_image):
+            #     #print("DEPTH MAGE")
+            #     dist = self.depth_image.get_distance(center_x, center_y)
+            #     print(dist)
+            #     self.depth_image = np.asanyarray(self.depth_image.get_data())
+            #     self.distancetocar = float(100 * dist)
+            #     print(self.distancetocar)
+            #     print("EXISTING SHIT")
             return  1
         #except:
             return 0

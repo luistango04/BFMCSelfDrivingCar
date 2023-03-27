@@ -62,15 +62,15 @@ class PScene:
         #     print("Request timed out:", e)
         # except requests.exceptions.RequestException as e:
         #     print("An error occurred:", e)
-        # try:
+        try:
             self.intersectiondetection()
-        # except:
-            #print("ERROR IN Intersection ")
-        # try:
+        except:
+            print("ERROR IN Intersection ")
+        try:
             self.deviation,self.direction = (self.lane_detection())
             self.distancetocar()
-        # except:
-            #print("lanedetectionfailure")
+        except:
+            print("lanedetectionfailure")
     def runobjectdetection(self):
 
             # Wait for a coherent pair of frames: depth and color
@@ -124,8 +124,14 @@ class PScene:
     def distancetocar(self):
         center_x = self.camera_resolutionx // 2
         center_y = self.camera_resolutiony // 2
-
-        self.distancetocar = int(self.SensingInput.depth_image[center_x, center_y])
+        #     #print("DEPTH MAGE")
+        #     dist = self.depth_image.get_distance(center_x, center_y)
+        #     print(dist)
+        #     self.depth_image = np.asanyarray(self.depth_image.get_data())
+        #     self.distancetocar = float(100 * dist)
+        #     print(self.distancetocar)
+        #     print("EXISTING SHIT")
+        self.distancetocar =float(100*(self.SensingInput.depth_image.get_distance(center_x, center_y)))
         return self.distancetocar
     def intersectiondetection(self):
 

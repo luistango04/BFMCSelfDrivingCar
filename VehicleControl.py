@@ -22,7 +22,7 @@ class vehiclecontrol:
 
 
     def cruisecontrol(self):
-        variablehandler = self.brain.cardistance - self.brain.target
+        variablehandler = self.brain.distancetocar - self.brain.target
 
         curspeed = self.Sensinginput.velo
        ## what

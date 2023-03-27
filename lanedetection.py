@@ -80,7 +80,7 @@ def plotHistogramintersection(inpImage):
     # Get the y-value at the highest peak index
     highest_peak_y = histogram[highest_peak_idx]
 
-    #revertthis =  plt.axvline(x=highest_peak_idx, color='r')
+    revertthis =  plt.axvline(x=highest_peak_idx, color='r')
 
     #get the numpypoints from the plot
     dataline = revertthis.get_data()
