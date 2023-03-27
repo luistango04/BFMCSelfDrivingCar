@@ -1,13 +1,16 @@
 import time
 import cv2
 import numpy as np
-
+import multiprocessing as mp
+import threading
 global DEBUG_MODE
 global JETSON_MODE
 global NAZRUL_MODE
-DEBUG_MODE = False
+DEBUG_MODE = True
 JETSON_MODE = True
 NAZRUL_MODE = False
+
+
 
 if JETSON_MODE:
     import pyrealsense2 as rs
@@ -24,6 +27,7 @@ def init(ser,DEBUG_MODE = False):
     starttime = time.time()
     camera_resolutionx = 424
     camera_resolutiony = 240
+
     global xm_per_pix
     global ym_per_pix
     #Measured distance of bottom part of FOV is 435mm
@@ -51,6 +55,61 @@ def init(ser,DEBUG_MODE = False):
 
 ## put planned activities connection protocol here : to set up and establish connection
 # def setupmqtt():
+class CameraThread(mp.Process):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.pipeline = rs.pipeline()
+
+        # Configure depth and color streams
+        pipeline = rs.pipeline()
+        camera_resolutionx = 424
+        camera_resolutiony = 240
+
+        # Configure the pipeline to stream both color, depth and motion
+        config = rs.config()
+        config.enable_stream(rs.stream.depth, camera_resolutionx, camera_resolutiony, rs.format.z16, 30)
+        config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
+        config.enable_stream(rs.stream.accel)
+        config.enable_stream(rs.stream.gyro)
+        self.config = config
+
+        self.pipeline.start(self.config)
+        self.coloframe = []
+        self.depth_image = []
+
+    def run(self):
+        while True:
+            frames = self.pipeline.wait_for_frames()
+            color_frame = frames.get_color_frame()
+            if not color_frame:
+                continue
+            # Do something with the color frame, such as displaying it or processing it
+            # Example:
+            # color_image = np.asanyarray(color_frame.get_data())
+            # cv2.imshow('Color Frame', color_image)
+            # cv2.waitKey(1)
+            frames = self.pipeline.wait_for_frames()
+
+            # Get the depth frame
+
+            # Get the depth frame every 5th time
+            self.depth_image = frames.get_depth_frame()
+            #self.depth_image = np.asanyarray(self.depth_image.get_data())
+            self.colorframe = frames.get_color_frame()
+            self.colorframe = np.asanyarray(self.colorframe.get_data())
+            # Reset the counter
+            self.counter = 0
+
+
+            self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
+
+    def get_latest_frame(self):
+        return self.colorframe, self.depth_image
+
+    def stop(self):
+            self.pipeline.stop()
+
+
 
 def camerainit(camera_resolutionx, camera_resolutiony):
 
@@ -195,3 +254,17 @@ def _generate_dummy_pipeline():
             pass
 
     return DummyPipeline()
+
+
+#shared_value = mp.Value('f', 0.0)
+#
+# # Create a camera thread and pass the shared value as an argument
+# camera_thread = CameraThread()
+#
+# # Start the camera thread
+# camera_thread.start()
+# colorframe,depthframe = camera_thread.get_latest_frame()
+# # Read the shared value from outside the thread
+# while True:
+#     cv2.imshow('color', colorframe)
+#     cv2.waitKey(1)

@@ -78,7 +78,7 @@ def perform_drive_write(command, delay,listitem,actuation, ser):
     command = check_angle(command)
     command = f"#1:{round(command, 5)};;\r\n".encode()
     if (DEBUG_MODE):
-        print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
+
         print(command)
     ser.write(command)
 
@@ -135,6 +135,13 @@ class Act:
                 float: The time elapsed since the start of the function.
         """
         # Calculate the time step since the last update
+        if(self.velocommands):
+            commands = self.velocommands
+
+            for command, delay,listitem in commands:
+                serial_thread = threading.Thread(target=perform_drive_write,args=(command, delay,listitem,self, self.ser))
+                serial_thread.start()
+                # Store a reference to the current write thread
 
         # Initialize the current speed with the last recorded speed#
 

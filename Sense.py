@@ -3,9 +3,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import Setup
 import pyrealsense2
+import multiprocessing
 
 global diameterofwheel 
 diameterofwheel = 65
+
+import threading
+import pyrealsense2 as rs
 
 
 
@@ -67,7 +71,10 @@ class SensingInput:
 
             # Exit the loop if the 'q' key is pressed
 
-
+    def worker(num):
+        """thread worker function"""
+        print('Worker: %s' % num)
+        return
 
     def velocity(self):
            try:

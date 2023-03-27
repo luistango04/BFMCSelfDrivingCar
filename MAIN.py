@@ -61,7 +61,7 @@ carspeed = .2
 command = f"#1:{carspeed};;\r\n".encode()
 #ser.write(command)
 try:
-    while (iter < 30):
+    while (iter < 100):
 
         iter = iter + 1
         print("PRINTED: " + str(Act.steeringstatus) + " To console")
