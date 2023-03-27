@@ -77,6 +77,7 @@ try:
             print(Scene)
             print("BRAIN GOT")
             print(Brain)
+            print("Speed", vehiclecontrol.velocommands)
             time.sleep(2)
 
 

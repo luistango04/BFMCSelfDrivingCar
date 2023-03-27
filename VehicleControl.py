@@ -48,6 +48,7 @@ class vehiclecontrol:
 
     def control(self):
         # Check each instance variable and perform actions
+        print("BRAINSTATEITS THIS ONE: ", self.brain.state)
         if self.brain.state == 'OBJECT_AND_SIGN_TRIGGER':
             self.break_execution()
         elif self.brain.state == 'OBJECT_TRIGGER':
