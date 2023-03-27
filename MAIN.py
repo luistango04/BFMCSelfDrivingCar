@@ -18,7 +18,10 @@ import serial
 if(DEBUG_MODE):
     ser = Mock()
 else:
-    ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+    try:
+        ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+    except:
+        ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
 
 pipeline = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
