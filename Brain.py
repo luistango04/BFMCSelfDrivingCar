@@ -7,7 +7,7 @@ class Brain:
             self.update(PScene)
 
         # Initialize instance variables for the seven triggers
-        self.break_trigger = False
+        self.brake_trigger = False
         self.road_search = False
         self.switch_lane = False
         self.parking = False
@@ -19,7 +19,7 @@ class Brain:
         self.distancetocar = PScene.distancetocar
         self.direction = PScene.direction
         self.stop_trigger = False
-        self.targetdistance = 400
+        self.targetdistance = 30
 
 
     def update(self, PScene):
@@ -61,7 +61,7 @@ class Brain:
         self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign,cruisecontrol))
 
         # Update instance variables for the seven triggers
-        self.break_trigger = 0
+        self.brake_trigger = 0
         self.road_search = 0
         self.switch_lane = 0
         self.parking = 0
@@ -76,14 +76,14 @@ class Brain:
         # Do something when no triggers are activated
         # ...
         # Return array of seven triggers
-        return [self.break_trigger, self.road_search, self.switch_lane, self.parking, self.lane_follow, self.acceleration,
+        return [self.brake_trigger, self.road_search, self.switch_lane, self.parking, self.lane_follow, self.acceleration,
                 self.intersection]
 
 #    def fetchactivities(self,connectionobject): ## Put planned activities here in brain
 
     def __str__(self):
         return f"Brain state: {self.state}\n" + \
-               f"Break trigger: {self.break_trigger}\n" + \
+               f"brake trigger: {self.brake_trigger}\n" + \
                f"Road search: {self.road_search}\n" + \
                f"Switch lane: {self.switch_lane}\n" + \
                f"Parking: {self.parking}\n" + \

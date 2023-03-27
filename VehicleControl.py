@@ -20,18 +20,30 @@ class vehiclecontrol:
         self.Sensinginput = PScene
         self.control()
 
-
     def cruisecontrol(self):
-        variablehandler = self.brain.distancetocar - self.brain.target
-
-        curspeed = self.Sensinginput.velo
-       ## what
+        if (self.brain.distancetocar < self.brain.targetdistance):
+            print("Decreasing speed")
+            if (self.speed >= 0.05):
+                # self.speed = self.Sensinginput.velo - 0.05
+                self.speed = self.speed - 0.05
+            else:
+                self.speed = 0.00
+        elif (self.brain.distancetocar > self.brain.targetdistance):
+            if (self.speed < 0.3):
+                print("Increasing speed")
+                # self.speed = self.Sensinginput.velo + 0.05
+                self.speed = self.speed + 0.05
+            else:
+                print("No change in speed")
+                self.speed = 0.3
+        else:
+            self.speed = self.speed
 
         self.steeringcommands = []
-        self.velocommands = [(variablehandler, 0, 0)]
-        lanefollow()
-
+        self.velocommands = [(self.speed, 0, 0)]
+        self.lanefollow()
         pass
+
 
     def control(self):
         # Check each instance variable and perform actions
