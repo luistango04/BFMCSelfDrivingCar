@@ -42,13 +42,12 @@ class vehiclecontrol:
 
         self.steeringcommands = []
         self.velocommands = [(self.speed, 0, 0)]
-        self.lanefollow()
+        #self.lanefollow()
         pass
 
 
     def control(self):
         # Check each instance variable and perform actions
-        print("BRAINSTATEITS THIS ONE: ", self.brain.state)
         if self.brain.state == 'OBJECT_AND_SIGN_TRIGGER':
             self.break_execution()
         elif self.brain.state == 'OBJECT_TRIGGER':

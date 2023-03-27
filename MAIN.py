@@ -58,11 +58,11 @@ carspeed = .2
 command = f"#1:{carspeed};;\r\n".encode()
 #ser.write(command)
 try:
-    while True:
+    while (iter < 30):
 
-
+        iter = iter + 1
         print("PRINTED: " + str(Act.steeringstatus) + " To console")
-
+        print(iter)
         # print("SENSING")
         Sense.senseall()
         # cv2.imshow("TEST",Sense.colorframe)\
@@ -73,12 +73,12 @@ try:
         Brain.update(Scene)
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):
-            print("DEBUG MODE")
-            print(Scene)
-            print("BRAIN GOT")
-            print(Brain)
+            #print("DEBUG MODE")
+            #print(Scene)
+            #print("BRAIN GOT")
+            #print(Brain)
             print("Speed", vehiclecontrol.velocommands)
-            time.sleep(2)
+            #time.sleep(2)
 
 
 
@@ -86,10 +86,10 @@ try:
 
         # time.sleep(2)
         if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):
-            print("carnotready")
+            #print("carnotready")
             pass
         else:
-            print("carready")
+            #print("carready")
             vehiclecontrol.updatefrombrainscene(Brain, Sense)
             Act.update(vehiclecontrol)
 
@@ -99,7 +99,7 @@ try:
         # test the FPS of the processor object
 
         # cv2.waitKey(5000)
-        iter = iter + 1
+
         pass
 
 

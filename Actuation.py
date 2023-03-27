@@ -50,7 +50,7 @@ def perform_steering_write(command, delay,listitem, actuation, ser):
     command = check_angle(command+steeringadjustment)
     command = f"#2:{round(command, 5)};;\r\n".encode()
     if (DEBUG_MODE):
-        print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
+        #print(f"{actual_time:.3f} - Expected: {expected_time:.3f} - Actual: {actual_time:.3f}")
         print(command)
     ser.write(command)
 
@@ -107,9 +107,11 @@ class Act:
     def update(self,VehicleControl):
         self.steeringcommands = VehicleControl.steeringcommands
         self.velocommands = VehicleControl.velocommands
-        self.write_steering_command()
+        if(self.steeringcommands):
+            self.write_steering_command()
  #       self.write_velocity_command(self.ser,self.lasttime,self.starttime)
-        self.write_velocity_command()
+        if(self.velocommands):
+            self.write_velocity_command()
         #print("VELO:" + str(self.velocity))
 
         #print("Accelo:" + str(self.acceleration))
@@ -135,13 +137,9 @@ class Act:
         # Calculate the time step since the last update
 
         # Initialize the current speed with the last recorded speed#
-        commands = self.velocommands
 
-        for command, delay,listitem in commands:
-            serial_thread = threading.Thread(target=perform_drive_write, args=(command, delay,listitem,self, self.ser))
-            serial_thread.start()
 
-        # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
+            # Otherwise, return 0 to indicate that the speed is still accelerating or decelerating
         return 0, time.time()
 
     def write_steering_command(self):
@@ -150,12 +148,13 @@ class Act:
 
 
         """
-        commands = self.steeringcommands
+        if(self.steeringcommands):
+            commands = self.steeringcommands
 
-        for command, delay,listitem in commands:
-            serial_thread = threading.Thread(target=perform_steering_write, args=(command, delay,listitem,self, self.ser))
-            serial_thread.start()
-            # Store a reference to the current write thread
+            for command, delay,listitem in commands:
+                serial_thread = threading.Thread(target=perform_steering_write, args=(command, delay,listitem,self, self.ser))
+                serial_thread.start()
+                # Store a reference to the current write thread
 
 
             # Wait for the serial write thread to finish

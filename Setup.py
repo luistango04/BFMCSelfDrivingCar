@@ -5,7 +5,7 @@ import numpy as np
 global DEBUG_MODE
 global JETSON_MODE
 global NAZRUL_MODE
-DEBUG_MODE = True
+DEBUG_MODE = False
 JETSON_MODE = True
 NAZRUL_MODE = False
 
