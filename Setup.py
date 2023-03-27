@@ -6,10 +6,11 @@ import threading
 global DEBUG_MODE
 global JETSON_MODE
 global NAZRUL_MODE
+global SERIALDEBUG
 DEBUG_MODE = True
 JETSON_MODE = True
 NAZRUL_MODE = False
-
+SERIALDEBUG = False
 
 
 if JETSON_MODE:

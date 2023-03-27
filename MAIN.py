@@ -1,5 +1,5 @@
 import Setup
-from Setup import DEBUG_MODE, JETSON_MODE,NAZRUL_MODE
+from Setup import DEBUG_MODE, JETSON_MODE,NAZRUL_MODE,SERIALDEBUG
 from Sense import SensingInput
 
 
@@ -15,7 +15,7 @@ import cv2
 import serial
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
 
-if(DEBUG_MODE):
+if(SERIALDEBUG):
     ser = Mock()
 else:
     try:
@@ -78,10 +78,11 @@ try:
         if(DEBUG_MODE):
             #print("DEBUG MODE")
             #print(Scene)
-            #print("BRAIN GOT")
-            #print(Brain)
+            print("BRAIN GOT")
+            print(Brain)
+
             print("Speed", vehiclecontrol.velocommands)
-            #time.sleep(2)
+            time.sleep(1)
 
 
 
