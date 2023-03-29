@@ -14,7 +14,7 @@ class vehiclecontrol:
         self.steeringcommands  = []
         self.velocommands = []
         self.steeringcap = [-23,23]
-        self.speed = 0.3
+        self.speed = 1
     def updatefrombrainscene(self, Brain,PScene):
         self.brain = Brain
         self.Sensinginput = PScene
@@ -30,13 +30,13 @@ class vehiclecontrol:
             else:
                 self.speed = 0.00
         elif (self.brain.distancetocar > self.brain.targetdistance):
-            if (self.speed < 0.3):
+            if (self.speed < 1):
                 print("Increasing speed")
                 # self.speed = self.Sensinginput.velo + 0.05
                 self.speed = self.speed + 0.05
             else:
                 print("No change in speed")
-                self.speed = 0.3
+                self.speed = 1
         else:
             self.speed = self.speed
 

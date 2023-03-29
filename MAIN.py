@@ -61,7 +61,7 @@ carspeed = .2
 command = f"#1:{carspeed};;\r\n".encode()
 #ser.write(command)
 try:
-    while (iter < 100):
+    while (iter < 100000):
 
         iter = iter + 1
         print("PRINTED: " + str(Act.steeringstatus) + " To console")
@@ -82,7 +82,7 @@ try:
             print(Brain)
 
             print("Speed", vehiclecontrol.velocommands)
-            time.sleep(1)
+            time.sleep(.01)
 
 
 
