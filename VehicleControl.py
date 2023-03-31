@@ -81,8 +81,8 @@ class vehiclecontrol:
         # ...
         # send velocity to very slow and steering to center
         self.ser.flush()
-        self.velocommands = [(.3,0, 0)] #velocity commands are (velocity, time, mode)
-        self.steeringcommands = [(0,0, 0)] #steering commands are (angle, time, mode)
+        self.velocommands = [(.3, 0, 0)] #velocity commands are (velocity, time, mode)
+        self.steeringcommands = [(0, 0, 0)] #steering commands are (angle, time, mode)
         pass
 
     def flush(self):

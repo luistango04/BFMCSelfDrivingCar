@@ -1,19 +1,23 @@
 import Setup
 from Setup import DEBUG_MODE, JETSON_MODE,NAZRUL_MODE,SERIALDEBUG
 from Sense import SensingInput
-
-
 from unittest.mock import Mock
 from SCENE import PScene
 import time
 from Brain import Brain
-
+from MQTTGenericClient import MQTTGenericClient
+from GenericJsonReader import GenericJsonReader
 from VehicleControl import vehiclecontrol
 from  Actuation import bothfree,velofree,steeringfree
 import Actuation
 import cv2
 import serial
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
+
+jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
+mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
+mqttControlMessage.start_client()
+mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
 
 if(SERIALDEBUG):
     ser = Mock()
@@ -26,7 +30,6 @@ else:
 pipeline = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
 ser.flush()
-
 
 def test_fps(object_instance, num_frames=120):
     """
@@ -73,7 +76,7 @@ try:
         if(JETSON_MODE):
             Scene.makeascene()
    
-        Brain.update(Scene)
+        Brain.update(Scene, jsonReader)
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):
             #print("DEBUG MODE")
