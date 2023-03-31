@@ -2,14 +2,14 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import Setup
-import pyrealsense2
+if Setup.JETSON_MODE:
+    import pyrealsense2 as rs
 import multiprocessing
 
 global diameterofwheel 
 diameterofwheel = 65
 
 import threading
-import pyrealsense2 as rs
 
 
 

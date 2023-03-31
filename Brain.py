@@ -1,8 +1,9 @@
 from SCENE import PScene
+from Setup import BFMC_MQTT_CONTROL_TOPIC
 
 class Brain:
 
-    def __init__(self, PScene):
+    def __init__(self, PScene, json_file=None):
         if PScene is not None:
             self.update(PScene)
 
@@ -20,17 +21,19 @@ class Brain:
         self.direction = PScene.direction
         self.stop_trigger = False
         self.targetdistance = 30
+        self.json_file = json_file
 
 
-    def update(self, PScene):
+    def update(self, PScene, jsonReader=None):
         object_trigger = PScene.get_object_trigger()
         sign_trigger = PScene.get_sign_trigger()
         intersection_trigger = PScene.intersection_trigger
         traffic_light_trigger = PScene.traffic_light_trigger
         self.deviation = PScene.deviation
         self.distancetocar = PScene.distancetocar
-
         stopsign  = PScene.stop_trigger
+        state_to_execute = jsonReader.get_next_message(BFMC_MQTT_CONTROL_TOPIC)
+
         #stopsign= True ## Eeddid otu when this works
         if(abs(self.deviation) > 20):
             lancorrect = True
@@ -59,8 +62,13 @@ class Brain:
 
             (True, True, False, False, False,False,False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
-        #print(state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect)))
-        self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign,cruisecontrol))
+
+        if state_to_execute is not None and state_to_execute in state_map.values():
+            self.state = state_to_execute
+            print("Executing state: " + state_to_execute)
+        else:
+            #print(state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect)))
+            self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign,cruisecontrol))
 
         # Update instance variables for the seven triggers
         self.brake_trigger = 0
