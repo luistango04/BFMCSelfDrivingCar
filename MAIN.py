@@ -12,7 +12,7 @@ from  Actuation import bothfree,velofree,steeringfree
 import Actuation
 import cv2
 import serial
-## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
+# Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
 
 jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
 mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
