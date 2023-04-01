@@ -12,12 +12,14 @@ from  Actuation import bothfree,velofree,steeringfree
 import Actuation
 import cv2
 import serial
-# Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
+import random
+## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
 
 jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
-mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
+mqttControlMessage = MQTTGenericClient(f"jetsonCar{random.randint(0, 1000)}", 1, jsonReader)
 mqttControlMessage.start_client()
 mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
+system_start = True
 
 if(SERIALDEBUG):
     ser = Mock()
@@ -54,8 +56,7 @@ def test_fps(object_instance, num_frames=120):
 #
 time.sleep(1)  # Give time to fire up camera birghtness
 Scene = PScene(Sense)
-
-Brain = Brain(Scene)
+Brain = Brain(Scene, jsonReader)
 vehiclecontrol = vehiclecontrol(Brain, ser, Sense)
 Act = Actuation.Act(vehiclecontrol, ser)
 
@@ -71,13 +72,13 @@ try:
         print("PRINTED: " + str(Act.steeringstatus) + " To console")
         print(iter)
         # print("SENSING")
-        Sense.senseall()
         # cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
         if(JETSON_MODE):
+            Sense.senseall()
             Scene.makeascene()
    
-        Brain.update(Scene, jsonReader)
+        Brain.update(Scene)
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):
             #print("DEBUG MODE")
@@ -86,7 +87,7 @@ try:
             print(Brain)
 
             print("Speed", vehiclecontrol.velocommands)
-            time.sleep(1)
+            time.sleep(.5)
 
 
 
