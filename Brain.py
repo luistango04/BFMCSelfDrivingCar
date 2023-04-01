@@ -32,6 +32,7 @@ class Brain:
         self.deviation = PScene.deviation
         self.distancetocar = PScene.distancetocar
         stopsign  = PScene.stop_trigger
+        state_to_execute = None
         if jsonReader != None:
             state_to_execute = jsonReader.get_next_message(BFMC_MQTT_CONTROL_TOPIC)
 

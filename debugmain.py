@@ -1,19 +1,35 @@
+import torch
 import Setup
+from Setup import DEBUG_MODE, JETSON_MODE, NAZRUL_MODE, SERIALDEBUG
 from Sense import SensingInput
 from unittest.mock import Mock
 from SCENE import PScene
 import time
 from Brain import Brain
+from MQTTGenericClient import MQTTGenericClient
+from GenericJsonReader import GenericJsonReader
 from VehicleControl import vehiclecontrol
-from  Actuation import bothfree,velofree,steeringfree
-
+from Actuation import bothfree, velofree, steeringfree
 import Actuation
+import cv2
+import serial
 
+# Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
 
-## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
-ser = Mock()  ## SET THIS TO SERIAL FOR LIVE!
-# ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
-pipeline = Setup.init(ser)
+jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
+mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
+mqttControlMessage.start_client()
+mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
+
+if (SERIALDEBUG):
+    ser = Mock()
+else:
+    try:
+        ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+    except:
+        ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
+
+pipeline,model = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
 ser.flush()
 
@@ -41,37 +57,76 @@ def test_fps(object_instance, num_frames=120):
 #
 time.sleep(1)  # Give time to fire up camera birghtness
 Scene = PScene(Sense)
+
 Brain = Brain(Scene)
 vehiclecontrol = vehiclecontrol(Brain, ser, Sense)
-Actuation = Actuation.Actuation(vehiclecontrol, ser)
+Act = Actuation.Act(vehiclecontrol, ser)
 
 start_time = time.time()
 iter = 1
-try:
-    while True:
-        carspeed = .3
-        command = f"#1:{carspeed};;\r\n".encode()
+carspeed = .2
+command = f"#1:{carspeed};;\r\n".encode()
 
-        # print("PRINTED: " + str(command) + " To console")
-        ser.write(command)
+
+
+def cardistance(model,Sense):
+    ### RUNNING YOLOV5 Mode
+    frame = Sense.colorframeraw
+    depth = Sense.depth_image
+
+    ## TAKE THE FRAME AND RUN YOLOV5
+
+    img = torch.from_numpy(frame)
+
+    ##
+    #[[xpos,ypos],[depthdistance],[score]]
+    results = [[0,0],[0],[0]]
+       ## self.distancetocar =float(100*(self.SensingInput.depth_image.get_distance(center_x, center_y)))
+    # Run inference on model
+
+    return results
+
+
+# ser.write(command)
+try:
+    while (iter < 100000):
+
+        iter = iter + 1
+        print("PRINTED: " + str(Act.steeringstatus) + " To console")
+        print(iter)
         # print("SENSING")
         Sense.senseall()
         # cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
-        Scene.makeascene()
-        time.sleep(1)
-        Brain.update(Scene)
-        Brain.perform_action()  ## THINK
+        print(cardistance(model,Sense))
+        print("HHELLO WORLD")
 
-        print(Brain)
-        print("BOTH FREE: " + str(bothfree))
-        # time.sleep(2)
-        if (not (bothfree) and Brain.override == False):
-            pass
-        else:
+        if (JETSON_MODE):
+            Scene.makeascene()
 
-            vehiclecontrol.updatefrombrainscene(Brain, Sense)
-            Actuation.update(vehiclecontrol)
+        #print(depthtocar(model,Sense.colorframeraw))
+
+        # Brain.update(Scene, jsonReader)
+        # Brain.perform_action()  ## THINK
+        # if (DEBUG_MODE):
+        #     # print("DEBUG MODE")
+        #     print(Scene)
+        #     print("BRAIN GOT")
+        #     print(Brain)
+        #
+        #     print("Speed", vehiclecontrol.velocommands)
+        #     time.sleep(1)
+        #
+        #     cv2.waitKey(5000)
+        # #
+        # # time.sleep(2)
+        # if (not (Act.steeringstatus) and not (Act.velocitystatus) and Brain.override == False):
+        #     # print("carnotready")
+        #     pass
+        # else:
+        #     # print("carready")
+        #     vehiclecontrol.updatefrombrainscene(Brain, Sense)
+        #     Act.update(vehiclecontrol)
 
         #
         #   cv2.waitKey(10000)
@@ -79,7 +134,7 @@ try:
         # test the FPS of the processor object
 
         # cv2.waitKey(5000)
-        iter = iter + 1
+
         pass
 
 
