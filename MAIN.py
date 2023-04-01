@@ -54,6 +54,7 @@ def test_fps(object_instance, num_frames=120):
 #
 time.sleep(1)  # Give time to fire up camera birghtness
 Scene = PScene(Sense)
+
 Brain = Brain(Scene)
 vehiclecontrol = vehiclecontrol(Brain, ser, Sense)
 Act = Actuation.Act(vehiclecontrol, ser)
@@ -80,16 +81,16 @@ try:
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):
             #print("DEBUG MODE")
-            #print(Scene)
+            print(Scene)
             print("BRAIN GOT")
             print(Brain)
 
             print("Speed", vehiclecontrol.velocommands)
-            time.sleep(.01)
+            time.sleep(1)
 
 
 
-            #cv2.waitKey(5000)
+            cv2.waitKey(5000)
 
         # time.sleep(2)
         if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):

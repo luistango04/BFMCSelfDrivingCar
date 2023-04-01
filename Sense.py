@@ -1,7 +1,9 @@
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 import Setup
+
 if Setup.JETSON_MODE:
     import pyrealsense2 as rs
 import multiprocessing
@@ -32,7 +34,7 @@ class SensingInput:
 
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
-        #try:
+        try:
             frames = self.pipeline.wait_for_frames()
 
             # Get the depth frame
@@ -40,7 +42,7 @@ class SensingInput:
             # Get the depth frame every 5th time
             self.depth_image = frames.get_depth_frame()
             #self.depth_image = np.asanyarray(self.depth_image.get_data())
-            self.colorframe = frames.get_color_frame()
+            self.colorframeraw = frames.get_color_frame()
             self.colorframe = np.asanyarray(self.colorframe.get_data())
             # Reset the counter
             self.counter = 0
@@ -62,7 +64,7 @@ class SensingInput:
             # Display the depth image
 
 
-        #except:
+        except:
             self.errorhandle.append(1) ## Returns 1 if intellisense fails to capture frame
             return 0
         #finally:
@@ -119,14 +121,14 @@ class SensingInput:
             center_x = self.camera_resolutionx // 2
             center_y = self.camera_resolutiony // 2
             #print("ENTERING DEPTH")
-            # if(self.depth_image):
-            #     #print("DEPTH MAGE")
-            #     dist = self.depth_image.get_distance(center_x, center_y)
-            #     print(dist)
-            #     self.depth_image = np.asanyarray(self.depth_image.get_data())
-            #     self.distancetocar = float(100 * dist)
-            #     print(self.distancetocar)
-            #     print("EXISTING SHIT")
+            if(self.depth_image):
+                #print("DEPTH MAGE")
+                dist = self.depth_image.get_distance(center_x, center_y)
+                print(dist)
+                self.depth_image = np.asanyarray(self.depth_image.get_data())
+                self.distancetocar = float(100 * dist)
+                print(self.distancetocar)
+                print("EXISTING SHIT")
             return  1
         #except:
             return 0
@@ -185,8 +187,4 @@ class SensingInput:
         return bboxes, image_data
 
 
-
-
-def accel_data(accel):
-    return np.asarray([accel.x, accel.y, accel.z])
 

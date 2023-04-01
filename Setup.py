@@ -1,5 +1,9 @@
 import time
 import cv2
+import torch
+import torch
+
+
 import numpy as np
 import multiprocessing as mp
 import threading
@@ -30,6 +34,18 @@ def init(ser,DEBUG_MODE = False):
     camera_resolutionx = 424
     camera_resolutiony = 240
 
+
+    # Model
+    model = torch.hub.load("ultralytics/yolov5", "yolov5s")  # or yolov5n - yolov5x6, custom
+
+    # Images
+    img = "https://ultralytics.com/images/zidane.jpg"  # or file, Path, PIL, OpenCV, numpy, list
+
+    # Inference
+    results = model(img)
+
+    # Results
+    results.print()  # or .show(), .save(), .crop(), .pandas(), etc.
     global xm_per_pix
     global ym_per_pix
     #Measured distance of bottom part of FOV is 435mm
@@ -52,7 +68,7 @@ def init(ser,DEBUG_MODE = False):
         yolo = Load_Yolo_model()
     pidcarsetting(kp,ki,kd,k_t,ser)
     time.sleep(1)
-    return pipeline
+    return pipeline, model
 
 
 ## put planned activities connection protocol here : to set up and establish connection
