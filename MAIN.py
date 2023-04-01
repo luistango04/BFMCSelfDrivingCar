@@ -82,7 +82,7 @@ try:
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):
             #print("DEBUG MODE")
-            #print(Scene)
+            print(Scene)
             print("BRAIN GOT")
             print(Brain)
 
@@ -91,7 +91,7 @@ try:
 
 
 
-            #cv2.waitKey(5000)
+            cv2.waitKey(5000)
 
         # time.sleep(2)
         if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):

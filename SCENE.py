@@ -352,6 +352,10 @@ class PScene:
             0,
             self.sign_trigger,self.deviation,self.direction ,self.intersection_trigger, self.traffic_light_trigger, self.position)
 
+
+
+
+
 # ################################################################################
 # #### START - FUNCTION TO APPLY PERSPECTIVE WARP ################################
 #

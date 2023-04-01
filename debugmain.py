@@ -14,8 +14,6 @@ import Actuation
 import cv2
 import serial
 
-
-
 ##########
 from yolov3.helper_functions import det_obj_est_dis
 from yolov3.configs import *
@@ -28,7 +26,7 @@ from yolov3.configs import *
 #jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
 #mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
 #mqttControlMessage.start_client()
-#mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)state_to_execute
+#mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
 
 if (SERIALDEBUG):
     ser = Mock()
