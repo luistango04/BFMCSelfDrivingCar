@@ -15,10 +15,13 @@ import serial
 import random
 ## Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
 
-jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
-mqttControlMessage = MQTTGenericClient(f"jetsonCar{random.randint(0, 1000)}", 1, jsonReader)
-mqttControlMessage.start_client()
-mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
+
+
+jsonReader = None# GenericJsonReader("MQTTVehicleControlMessages.json")
+#jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
+#mqttControlMessage = MQTTGenericClient(f"jetsonCar{random.randint(0, 1000)}", 1, jsonReader)
+#mqttControlMessage.start_client()
+#mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
 system_start = True
 
 if(SERIALDEBUG):
@@ -29,7 +32,7 @@ else:
     except:
         ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
 
-pipeline = Setup.init(ser)
+pipeline, model = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
 ser.flush()
 
@@ -56,7 +59,8 @@ def test_fps(object_instance, num_frames=120):
 #
 time.sleep(1)  # Give time to fire up camera birghtness
 Scene = PScene(Sense)
-Brain = Brain(Scene, jsonReader)
+
+Brain = Brain(Scene)
 vehiclecontrol = vehiclecontrol(Brain, ser, Sense)
 Act = Actuation.Act(vehiclecontrol, ser)
 
@@ -64,20 +68,22 @@ start_time = time.time()
 iter = 1
 carspeed = .2
 command = f"#1:{carspeed};;\r\n".encode()
+
+
 #ser.write(command)
 try:
     while (iter < 100000):
 
         iter = iter + 1
-        print("PRINTED: " + str(Act.steeringstatus) + " To console")
+        #print("PRINTED: " + str(Act.steeringstatus) + " To console")
         print(iter)
         # print("SENSING")
         # cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
         if(JETSON_MODE):
             Sense.senseall()
-            Scene.makeascene()
-   
+            Scene.makeascene(model)
+ 	 
         Brain.update(Scene)
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):
@@ -85,9 +91,9 @@ try:
             print(Scene)
             print("BRAIN GOT")
             print(Brain)
-
+		
             print("Speed", vehiclecontrol.velocommands)
-            time.sleep(.5)
+            time.sleep(.1)
 
 
 
@@ -95,10 +101,10 @@ try:
 
         # time.sleep(2)
         if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):
-            #print("carnotready")
+            print("carnotready")
             pass
         else:
-            #print("carready")
+            print("carready")
             vehiclecontrol.updatefrombrainscene(Brain, Sense)
             Act.update(vehiclecontrol)
 
@@ -115,15 +121,17 @@ try:
 
 except KeyboardInterrupt:
     print("Keyboard interrupt detected. Exiting...")
-    ser.flush()
-    carspeed = 0  ## Stop the car
-    command = f"#1:{carspeed};;\r\n".encode()
-    ser.write(command)
-    pipeline.stop()
+    
+#    ser.flush()
+#    carspeed = 0  ## Stop the car
+#    command = f"#1:{carspeed};;\r\n".encode()
+#    ser.write(command)
 
 end_time = time.time()
 time_taken = end_time - start_time
 iterations_per_second = iter / time_taken
 
 print("Iterations per second:", iterations_per_second)
+pipeline.stop()
+
 

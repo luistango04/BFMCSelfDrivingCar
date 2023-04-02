@@ -35,11 +35,11 @@ class SensingInput:
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
         #try:
-            print("Intellisense"+str(self.pipeline))
+            #print("Intellisense"+str(self.pipeline))
             frames = self.pipeline.wait_for_frames()
             self.depth_image = frames.get_depth_frame()
             self.colorframeraw = frames.get_color_frame()
-            print(self.colorframeraw)
+            #print(self.colorframeraw)
             self.colorframe = np.asanyarray(self.colorframeraw.get_data())
             # Reset the counter
 

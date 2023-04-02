@@ -3,7 +3,7 @@ import Setup
 from Setup import DEBUG_MODE, JETSON_MODE, NAZRUL_MODE, SERIALDEBUG
 from Sense import SensingInput
 from unittest.mock import Mock
-from SCENE import PScene
+from SCENE import PScene,cardistance
 import time
 from Brain import Brain
 from MQTTGenericClient import MQTTGenericClient
@@ -15,8 +15,9 @@ import cv2
 import serial
 
 ##########
-from yolov3.helper_functions import det_obj_est_dis
-from yolov3.configs import *
+if NAZRUL_MODE:
+	from yolov3.helper_functions import det_obj_est_dis
+	from yolov3.configs import *
 ##########
 
 
@@ -76,10 +77,10 @@ command = f"#1:{carspeed};;\r\n".encode()
 
 
 
-def cardistance(model):
+#def cardistance(model):
     ### RUNNING YOLOV5 Mode
-    frame = 'img.png'
-    depth = 0
+#    frame = 'img.png'
+#    depth = 0
 
     ## TAKE THE FRAME AND RUN YOLOV5
 
@@ -89,17 +90,17 @@ def cardistance(model):
     #[[xpos,ypos],[depthdistance],[score]
        ## self.distancetocar =float(100*(self.SensingInput.depth_image.get_distance(center_x, center_y)))
     # Run inference on model
-cardistance
-    image, locX, locY, mscore = det_obj_est_dis(model, frame, input_size=YOLO_INPUT_SIZE,  rectangle_colors=(255,0,0), depth_frame=depth)
+#    image, locX, locY, mscore = det_obj_est_dis(model, frame, input_size=YOLO_INPUT_SIZE,  
+#rectangle_colors=(255,0,0), depth_frame=depth)
 
-    results = [[locX, locY],[0],[mscore]]
+#    results = [[locX, locY],[0],[mscore]]
 
-    cv2.imshow("Color frame", image)
-    key = cv2.waitKey(1)
-    if key == 27:
-        return
+#    cv2.imshow("Color frame", image)
+#    key = cv2.waitKey(1)
+#    if key == 27:
+#        return
 
-    return results
+#    return results
 
 
 # ser.write(command)
@@ -114,7 +115,7 @@ try:
         Sense.senseall()
         # cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
-        print(cardistance(model=model))
+        #print(cardistance.cardistance(model=model))
         print("HHELLO WORLD")
 
         if (JETSON_MODE):

@@ -24,16 +24,16 @@ class vehiclecontrol:
         pass
         if (self.brain.distancetocar < self.brain.targetdistance):
             print("Decreasing speed")
-            if (self.speed >= 0.05):
+            if (self.speed >= 0.10):
                 # self.speed = self.Sensinginput.velo - 0.05
-                self.speed = self.speed - 0.05
+                self.speed = self.speed - 0.10
             else:
                 self.speed = 0.00
         elif (self.brain.distancetocar > self.brain.targetdistance):
             if (self.speed < 1):
                 print("Increasing speed")
                 # self.speed = self.Sensinginput.velo + 0.05
-                self.speed = self.speed + 0.05
+                self.speed = self.speed + 0.10
             else:
                 print("No change in speed")
                 self.speed = 1
@@ -65,8 +65,8 @@ class vehiclecontrol:
         elif self.brain.state == 'TRAFFIC_LIGHT_TRIGGER':
             self.accel()
         elif self.brain.state == 'CRUISECONTROL':
-            print("ENTERING CRUISECONTROL MOTHERFUCKERS!!")
-            #self.cruisecontrol()
+            #print("ENTERING CRUISECONTROL MOTHERFUCKERS!!")
+            self.cruisecontrol()
         elif self.brain.state == 'OBJECT_AND_INTERSECTION_TRIGGER':
             self.cruisecontrol()
         elif self.brain.state == 'NO_TRIGGER':
