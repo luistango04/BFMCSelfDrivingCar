@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import Setup
+import pyrealsense2 as rs
+# if Setup.JETSON_MODE:
 
-if Setup.JETSON_MODE:
-    import pyrealsense2 as rs
 import multiprocessing
 
 global diameterofwheel 
@@ -34,18 +34,15 @@ class SensingInput:
 
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
-        try:
+        #try:
+            print("Intellisense"+str(self.pipeline))
             frames = self.pipeline.wait_for_frames()
-
-            # Get the depth frame
-
-            # Get the depth frame every 5th time
             self.depth_image = frames.get_depth_frame()
-            #self.depth_image = np.asanyarray(self.depth_image.get_data())
             self.colorframeraw = frames.get_color_frame()
-            self.colorframe = np.asanyarray(self.colorframe.get_data())
+            print(self.colorframeraw)
+            self.colorframe = np.asanyarray(self.colorframeraw.get_data())
             # Reset the counter
-            self.counter = 0
+
 
             # Get the color frame
 
@@ -56,7 +53,7 @@ class SensingInput:
 
             # Convert the color frame to a NumPy array
 
-            self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
+            #self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
 
             #self.gyro = gyro_data(frames[3].as_motion_frame().get_motion_data())
             #print(self.gyro)
@@ -64,7 +61,7 @@ class SensingInput:
             # Display the depth image
 
 
-        except:
+       # except:
             self.errorhandle.append(1) ## Returns 1 if intellisense fails to capture frame
             return 0
         #finally:
@@ -118,17 +115,6 @@ class SensingInput:
             self.Intellsensor()
 
             self.velocity()
-            center_x = self.camera_resolutionx // 2
-            center_y = self.camera_resolutiony // 2
-            #print("ENTERING DEPTH")
-            if(self.depth_image):
-                #print("DEPTH MAGE")
-                dist = self.depth_image.get_distance(center_x, center_y)
-                print(dist)
-                self.depth_image = np.asanyarray(self.depth_image.get_data())
-                self.distancetocar = float(100 * dist)
-                print(self.distancetocar)
-                print("EXISTING SHIT")
             return  1
         #except:
             return 0

@@ -1,3 +1,5 @@
+import numpy as np
+from scipy.stats import norm
 import sys
 import Setup
 from matplotlib import pyplot as plt, cm, colors
@@ -53,7 +55,7 @@ class PScene:
 
 
 
-    def makeascene(self):
+    def makeascene(self,model):
         # try:
         #     self.runobjectdetection()
         # except requests.exceptions.ConnectionError as e:
@@ -68,9 +70,15 @@ class PScene:
             print("ERROR IN Intersection ")
         try:
             self.deviation,self.direction = (self.lane_detection())
-            self.distancetocar()
+
         except:
             print("lanedetectionfailure")
+
+        try:
+            self.distancetocar(model)
+        except:
+            print("distance to car failure")
+
     def runobjectdetection(self):
 
             # Wait for a coherent pair of frames: depth and color
@@ -121,17 +129,16 @@ class PScene:
                      ## priority 6
             return 1
 
-    def distancetocar(self):
-        center_x = self.camera_resolutionx // 2
-        center_y = self.camera_resolutiony // 2
-        #     #print("DEPTH MAGE")
-        #     dist = self.depth_image.get_distance(center_x, center_y)
-        #     print(dist)
-        #     self.depth_image = np.asanyarray(self.depth_image.get_data())
-        #     self.distancetocar = float(100 * dist)
-        #     print(self.distancetocar)
-        #     print("EXISTING SHIT")
-        self.distancetocar =float(100*(self.SensingInput.depth_image.get_distance(center_x, center_y)))
+    def distancetocar(self,model):
+        results = cardistance(model, self.SensingInput.colorframeraw)
+        if(results is None):
+            return 0
+
+        center_x = int(results[0][0])
+        center_y = int(results[0][1])
+
+        self.distancetocar =float(100*(self.SensingInput.depth_image.get_distance(center_x,center_y)))
+        print("Distance to Car:"+ str(self.distancetocar))
         return self.distancetocar
     def intersectiondetection(self):
 
@@ -367,3 +374,100 @@ class PScene:
 #
 #
 # time.sleep(2)
+def cardistance(model,current_frame):
+    current_frame = np.asanyarray(current_frame.get_data())
+
+    cv2.imshow("camera",current_frame)
+
+    results = model(current_frame)
+    #print(results)
+    # Extract the bounding box coordinates, class indices, and scores for each detected object
+
+    bboxes = results.xyxy[0]
+    class_indices = results.pred[0][:, -1].long().tolist()
+    scores = results.pred[0][:, -1].tolist()
+
+
+    # Iterate through each bounding box and get its four corners, xmid, ymid, score, and type
+    objects_list = []
+
+    for i, bbox in enumerate(bboxes):
+        # Get the score and type of the object
+        score = scores[i]
+        obj_type = class_indices[i]
+
+        # Process only objects with a type of 2 or 3
+        if obj_type in [2, 3]:
+            # Extract the top-left and bottom-right coordinates of the bounding box
+            x1, y1, x2, y2 = bbox[:4]
+
+            # Calculate the four corners of the bounding box
+            top_left = (int(x1), int(y1))
+            top_right = (int(x2), int(y1))
+            bottom_left = (int(x1), int(y2))
+            bottom_right = (int(x2), int(y2))
+
+            # Calculate the midpoint of the bounding box
+            xmid = int((x1 + x2) / 2)
+            ymid = int((y1 + y2) / 2)
+            # Calculate the four corners of the bounding box
+            top_left = (int(x1), int(y1))
+            bottom_right = (int(x2), int(y2))
+
+            # Draw the bounding box on the frame
+            cv2.rectangle(current_frame, top_left, bottom_right, (0, 255, 0), 2)
+            # Add text box above the bounding box
+
+
+
+
+            # Add the object's information to the list of objects
+
+            mu = current_frame.shape[1] / 2  # Mean of the distribution (middle of the frame)
+
+
+            sigma = current_frame.shape[1] / 6  # Standard deviation of the distribution (1/6th of the frame width)
+            x_distribution = norm(mu, sigma).pdf(xmid)
+
+            # Multiply the midpoint by the score and the x distribution
+            xmid_scored = xmid * score * x_distribution
+            #print("exdistribution is : " + str(xmid_scored))
+            # Add text box above the bounding box
+            text = f"{xmid_scored:.2f}"  # Format the score as a string with 2 decimal places
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.5
+            thickness = 1
+            text_size, _ = cv2.getTextSize(text, font, font_scale, thickness)
+
+            text_pos = (int(x1), int(y1 - text_size[1]))  # Position the text box above the bounding box
+
+            cv2.rectangle(current_frame, text_pos, (text_pos[0] + text_size[0], text_pos[1] + text_size[1]),
+                          (0, 255, 0), -1)
+            cv2.putText(current_frame, text, text_pos, font, font_scale, (0, 0, 0), thickness)
+            # Add text box above the bounding box
+            objects_list.append({
+                'corners': (top_left, top_right, bottom_left, bottom_right),
+                'xmid': xmid,
+                'ymid': ymid,
+                'score': score,
+                'type': obj_type,
+                'xmid_scored': xmid_scored
+
+            })
+
+    cv2.imshow("camera", current_frame)
+    key = cv2.waitKey(1)
+    if key == 27:
+        return
+    #time.sleep(3)
+    if(objects_list == []):
+        return None
+    else:
+        highest_score_object = max(objects_list, key=lambda obj: obj['score'])
+        results = [[highest_score_object['xmid'], highest_score_object['ymid']], [0], [highest_score_object['xmid_scored']]]
+        # Return the list of objects
+
+        return results
+
+
+

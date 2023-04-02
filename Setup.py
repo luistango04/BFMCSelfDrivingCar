@@ -1,9 +1,8 @@
 import time
 import cv2
+from models.yolo import Model
 import torch
-import torch
-
-
+from models.yolo import DetectionModel
 import numpy as np
 import multiprocessing as mp
 import threading
@@ -11,13 +10,20 @@ global DEBUG_MODE
 global JETSON_MODE
 global NAZRUL_MODE
 global SERIALDEBUG
+
+from yolov5 import *
+
 DEBUG_MODE = True
 JETSON_MODE = True
 NAZRUL_MODE = False
 SERIALDEBUG = True
 BFMC_MQTT_CONTROL_TOPIC = "bfmc/control"
 
-
+if NAZRUL_MODE:
+    from yolov3.configs import *
+    from yolov3.yolov4 import *
+    from yolov3.helper_functions import load_yolo_weights
+    import tensorflow as tf
 if JETSON_MODE:
     import pyrealsense2 as rs
     import usb.core  # Import for the USB library
@@ -34,18 +40,11 @@ def init(ser,DEBUG_MODE = False):
     camera_resolutionx = 424
     camera_resolutiony = 240
 
-
-    # Model
+    # Load the model from a .pt file
     model = torch.hub.load("ultralytics/yolov5", "yolov5s")  # or yolov5n - yolov5x6, custom
 
-    # Images
-    img = "https://ultralytics.com/images/zidane.jpg"  # or file, Path, PIL, OpenCV, numpy, list
-
-    # Inference
-    results = model(img)
 
     # Results
-    results.print()  # or .show(), .save(), .crop(), .pandas(), etc.
     global xm_per_pix
     global ym_per_pix
     #Measured distance of bottom part of FOV is 435mm
@@ -68,65 +67,12 @@ def init(ser,DEBUG_MODE = False):
         yolo = Load_Yolo_model()
     pidcarsetting(kp,ki,kd,k_t,ser)
     time.sleep(1)
+    print("Setup Done", pipeline)
     return pipeline, model
 
 
 ## put planned activities connection protocol here : to set up and establish connection
 # def setupmqtt():
-class CameraThread(mp.Process):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.pipeline = rs.pipeline()
-
-        # Configure depth and color streams
-        pipeline = rs.pipeline()
-        camera_resolutionx = 424
-        camera_resolutiony = 240
-
-        # Configure the pipeline to stream both color, depth and motion
-        config = rs.config()
-        config.enable_stream(rs.stream.depth, camera_resolutionx, camera_resolutiony, rs.format.z16, 30)
-        config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
-        config.enable_stream(rs.stream.accel)
-        config.enable_stream(rs.stream.gyro)
-        self.config = config
-
-        self.pipeline.start(self.config)
-        self.coloframe = []
-        self.depth_image = []
-
-    def run(self):
-        while True:
-            frames = self.pipeline.wait_for_frames()
-            color_frame = frames.get_color_frame()
-            if not color_frame:
-                continue
-            # Do something with the color frame, such as displaying it or processing it
-            # Example:
-            # color_image = np.asanyarray(color_frame.get_data())
-            # cv2.imshow('Color Frame', color_image)
-            # cv2.waitKey(1)
-            frames = self.pipeline.wait_for_frames()
-
-            # Get the depth frame
-
-            # Get the depth frame every 5th time
-            self.depth_image = frames.get_depth_frame()
-            #self.depth_image = np.asanyarray(self.depth_image.get_data())
-            self.colorframe = frames.get_color_frame()
-            self.colorframe = np.asanyarray(self.colorframe.get_data())
-            # Reset the counter
-            self.counter = 0
-
-
-            self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
-
-    def get_latest_frame(self):
-        return self.colorframe, self.depth_image
-
-    def stop(self):
-            self.pipeline.stop()
-
 
 
 def camerainit(camera_resolutionx, camera_resolutiony):
@@ -171,14 +117,11 @@ def camerainit(camera_resolutionx, camera_resolutiony):
     config = rs.config()
     config.enable_stream(rs.stream.depth, camera_resolutionx, camera_resolutiony, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
-    config.enable_stream(rs.stream.accel)
-    config.enable_stream(rs.stream.gyro)
 
 
-    # Display the color image using OpenCV
+    #config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
+#onfig.enable_stream(rs.stream.gyro)
 
-   
-    #    config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
     # Start streaming
     pipeline.start(config)
 
