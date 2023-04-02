@@ -1,4 +1,4 @@
-import torch
+#import torch
 import Setup
 from Setup import DEBUG_MODE, JETSON_MODE, NAZRUL_MODE, SERIALDEBUG
 from Sense import SensingInput
@@ -14,12 +14,19 @@ import Actuation
 import cv2
 import serial
 
+##########
+from yolov3.helper_functions import det_obj_est_dis
+from yolov3.configs import *
+##########
+
+
+
 # Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
 
-jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
-mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
-mqttControlMessage.start_client()
-mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
+#jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
+#mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
+#mqttControlMessage.start_client()
+#mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
 
 if (SERIALDEBUG):
     ser = Mock()
@@ -29,7 +36,7 @@ else:
     except:
         ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
 
-pipeline,model = Setup.init(ser)
+pipeline, model = Setup.init(ser)
 Sense = SensingInput(ser, pipeline)
 ser.flush()
 
@@ -69,20 +76,28 @@ command = f"#1:{carspeed};;\r\n".encode()
 
 
 
-def cardistance(model,Sense):
+def cardistance(model):
     ### RUNNING YOLOV5 Mode
-    frame = Sense.colorframeraw
-    depth = Sense.depth_image
+    frame = 'img.png'
+    depth = 0
 
     ## TAKE THE FRAME AND RUN YOLOV5
 
-    img = torch.from_numpy(frame)
+    #img = torch.from_numpy(frame)
 
     ##
-    #[[xpos,ypos],[depthdistance],[score]]
-    results = [[0,0],[0],[0]]
+    #[[xpos,ypos],[depthdistance],[score]
        ## self.distancetocar =float(100*(self.SensingInput.depth_image.get_distance(center_x, center_y)))
     # Run inference on model
+cardistance
+    image, locX, locY, mscore = det_obj_est_dis(model, frame, input_size=YOLO_INPUT_SIZE,  rectangle_colors=(255,0,0), depth_frame=depth)
+
+    results = [[locX, locY],[0],[mscore]]
+
+    cv2.imshow("Color frame", image)
+    key = cv2.waitKey(1)
+    if key == 27:
+        return
 
     return results
 
@@ -91,6 +106,7 @@ def cardistance(model,Sense):
 try:
     while (iter < 100000):
 
+        print("HHELLO WORLD")
         iter = iter + 1
         print("PRINTED: " + str(Act.steeringstatus) + " To console")
         print(iter)
@@ -98,7 +114,7 @@ try:
         Sense.senseall()
         # cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
-        print(cardistance(model,Sense))
+        print(cardistance(model=model))
         print("HHELLO WORLD")
 
         if (JETSON_MODE):
@@ -152,4 +168,3 @@ time_taken = end_time - start_time
 iterations_per_second = iter / time_taken
 
 print("Iterations per second:", iterations_per_second)
-

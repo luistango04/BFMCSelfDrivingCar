@@ -21,7 +21,7 @@ class vehiclecontrol:
         self.control()
 
     def cruisecontrol(self):
-
+        pass
         if (self.brain.distancetocar < self.brain.targetdistance):
             print("Decreasing speed")
             if (self.speed >= 0.05):
@@ -66,7 +66,7 @@ class vehiclecontrol:
             self.accel()
         elif self.brain.state == 'CRUISECONTROL':
             print("ENTERING CRUISECONTROL MOTHERFUCKERS!!")
-            self.cruisecontrol()
+            #self.cruisecontrol()
         elif self.brain.state == 'OBJECT_AND_INTERSECTION_TRIGGER':
             self.cruisecontrol()
         elif self.brain.state == 'NO_TRIGGER':
