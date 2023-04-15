@@ -1,8 +1,8 @@
 import time
 import cv2
-from models.yolo import Model
+#from models.yolo import Model
 import torch
-from models.yolo import DetectionModel
+#from models.yolo import DetectionModel
 import numpy as np
 import multiprocessing as mp
 import threading

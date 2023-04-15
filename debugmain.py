@@ -89,7 +89,7 @@ def cardistance(model):
     #[[xpos,ypos],[depthdistance],[score]
        ## self.distancetocar =float(100*(self.SensingInput.depth_image.get_distance(center_x, center_y)))
     # Run inference on model
-cardistance
+
     image, locX, locY, mscore = det_obj_est_dis(model, frame, input_size=YOLO_INPUT_SIZE,  rectangle_colors=(255,0,0), depth_frame=depth)
 
     results = [[locX, locY],[0],[mscore]]
@@ -122,8 +122,8 @@ try:
 
         #print(depthtocar(model,Sense.colorframeraw))
 
-        # Brain.update(Scene, jsonReader)
-        # Brain.perform_action()  ## THINK
+        Brain.update(Scene, jsonReader)
+        Brain.perform_action()  ## THINK
         # if (DEBUG_MODE):
         #     # print("DEBUG MODE")
         #     print(Scene)
