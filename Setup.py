@@ -1,9 +1,12 @@
 import time
-import cv2
+import numpy as np
 #from models.yolo import Model
 import torch
+import cv2
+
 #from models.yolo import DetectionModel
 import numpy as np
+
 import multiprocessing as mp
 import threading
 global DEBUG_MODE
@@ -13,11 +16,10 @@ global SERIALDEBUG
 
 from yolov5 import *
 
-
-DEBUG_MODE = True
+DEBUG_MODE = False
 JETSON_MODE = True
 NAZRUL_MODE = False
-SERIALDEBUG = True
+SERIALDEBUG = False
 BFMC_MQTT_CONTROL_TOPIC = "bfmc/control"
 
 if NAZRUL_MODE:
@@ -40,6 +42,8 @@ def init(ser,DEBUG_MODE = False):
     starttime = time.time()
     camera_resolutionx = 424
     camera_resolutiony = 240
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(device)
 
     # Load the model from a .pt file
     model = torch.hub.load("ultralytics/yolov5", "yolov5s")  # or yolov5n - yolov5x6, custom

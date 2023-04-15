@@ -24,16 +24,16 @@ class vehiclecontrol:
         pass
         if (self.brain.distancetocar < self.brain.targetdistance):
             print("Decreasing speed")
-            if (self.speed >= 0.05):
+            if (self.speed >= 0.10):
                 # self.speed = self.Sensinginput.velo - 0.05
-                self.speed = self.speed - 0.05
+                self.speed = self.speed - 0.10
             else:
                 self.speed = 0.00
         elif (self.brain.distancetocar > self.brain.targetdistance):
             if (self.speed < 1):
                 print("Increasing speed")
                 # self.speed = self.Sensinginput.velo + 0.05
-                self.speed = self.speed + 0.05
+                self.speed = self.speed + 0.10
             else:
                 print("No change in speed")
                 self.speed = 1
@@ -65,8 +65,8 @@ class vehiclecontrol:
         elif self.brain.state == 'TRAFFIC_LIGHT_TRIGGER':
             self.accel()
         elif self.brain.state == 'CRUISECONTROL':
-            print("ENTERING CRUISECONTROL MOTHERFUCKERS!!")
-            #self.cruisecontrol()
+            #print("ENTERING CRUISECONTROL MOTHERFUCKERS!!")
+            self.cruisecontrol()
         elif self.brain.state == 'OBJECT_AND_INTERSECTION_TRIGGER':
             self.cruisecontrol()
         elif self.brain.state == 'NO_TRIGGER':
@@ -129,7 +129,7 @@ class vehiclecontrol:
     def stopstraight(self):
         self.steeringcommands = [(0, 0, 0)]
         self.velocommands = [(0.0, 0, 2),(0.3, 2, 1),(0.3,4,0)]
-        print("Turning left")
+        print("Stop and go straight")
 
     def turn_left(self):
         self.steeringcommands = [(0, 0, 2), (-23, 2, 1), (0, 6.5, 0)]
@@ -176,6 +176,25 @@ class vehiclecontrol:
         # return to cruising speed
 
         # Execute parking function based on trigger value
+    
+    def parallelparking(self):
+        self.ser.flush()
+        self.steeringcommands = [(0,  (2/0.2),4),(23,  (0.45888/0.2), 3),(0,   (40/0.2),2),(-23, (0.52588/0.2), 1),(0,0,0)]
+        self.velocommands =     [(0.2,(2/0.2),4),(-0.2,(0.45888/0.2), 3),(-0.2,(40/0.2),2),(-0.2,(0.52588/0.2), 1),(0,0,0)]
+        print("Parallel Parking")
+        
+    def perpendicularparking(self):
+        self.ser.flush()
+        self.steeringcommands = [(0,(2.5/0.2),  4),(-23, (0.35108/0.2), 3),(23,  (1446.09/0.2),2),(0,   (170/0.2), 1),(0,0,0)]
+        self.velocommands =     [(0.2,(2.5/0.2),4),(-0.2,(0.35108/0.2), 3),(-0.2,(1446.09/0.2),2),(-0.2,(170/0.2), 1),(0,0,0)]
+        print("Perpendicular Parking")
+        
+    def overtake(self):
+        self.ser.flush()
+        ots = 0.3 # m/s overtaking speed
+        self.steeringcommands = [(-23,(0.43145/ots),5),(0,  (0.2/ots), 4),(23, (0.83717/ots),3),(0,  (263/ots), 2),(-23,(0.40573/ots),1),(0,0,0)]
+        self.velocommands =     [(ots,(0.43145/ots),5),(ots,(0.2/ots), 4),(ots,(0.83717/ots),3),(ots,(263/ots), 2),(ots,(0.40573/ots),1),(0,0,0)]
+        print("Overtake")
 
     def __str__(self):
         return f"UNDERCONSTRUCTION"

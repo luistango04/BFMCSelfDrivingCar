@@ -18,7 +18,7 @@ class Brain:
         self.distancetocar = PScene.distancetocar
         self.direction = PScene.direction
         self.stop_trigger = False
-        self.targetdistance = 30
+        self.targetdistance = 50
         self.jsonReader = jsonReader
         self.system_start = True #this guy is immediately set to false
         self.current_mqtt_message = None
@@ -36,12 +36,12 @@ class Brain:
         self.distancetocar = PScene.distancetocar
         stopsign  = PScene.stop_trigger
 
-        if self.jsonReader != None:
-            print("GOT MQTT MESSAGE")
-            tmp = self.jsonReader.get_next_message(BFMC_MQTT_CONTROL_TOPIC, self.system_start)
-            if tmp != None:
-                self.current_mqtt_message = tmp
-            self.system_start = False
+        #if self.jsonReader != None:
+        #    print("GOT MQTT MESSAGE")
+        #    tmp = self.jsonReader.get_next_message(BFMC_MQTT_CONTROL_TOPIC, self.system_start)
+        #    if tmp != None:
+        #        self.current_mqtt_message = tmp
+        #    self.system_start = False
 
         #stopsign= True ## Eeddid otu when this works
         if(abs(self.deviation) > 20):
@@ -72,12 +72,12 @@ class Brain:
             (True, True, False, False, False,False,False): 'OBJECT_AND_INTERSECTION_TRIGGER',
         }
 
-        if self.current_mqtt_message is not None and self.current_mqtt_message in state_map.values():
-            self.state = self.current_mqtt_message
-            print("Executing state: " + self.current_mqtt_message)
-        else:
+        #if self.current_mqtt_message is not None and self.current_mqtt_message in state_map.values():
+        #    self.state = self.current_mqtt_message
+        #    print("Executing state: " + self.current_mqtt_message)
+    #    else:
             #print(state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect)))
-            self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign,cruisecontrol))
+        self.state = state_map.get((object_trigger, sign_trigger, intersection_trigger, traffic_light_trigger,lancorrect,stopsign,cruisecontrol))
 
         # Update instance variables for the seven triggers
         self.brake_trigger = 0

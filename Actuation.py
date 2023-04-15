@@ -77,6 +77,7 @@ def perform_drive_write(command, delay,listitem,actuation, ser):
 
     command = check_angle(command)
     command = f"#1:{round(command, 5)};;\r\n".encode()
+    print(command)
     if (DEBUG_MODE):
 
         print(command)

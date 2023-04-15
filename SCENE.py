@@ -48,7 +48,7 @@ class PScene:
         self.parking_trigger = False
         self.priority_trigger = False
         self.signs = []
-
+        self.distancetocar = 0
 
         self.nolane = False
 
@@ -75,7 +75,7 @@ class PScene:
             print("lanedetectionfailure")
 
         try:
-            self.distancetocar(model)
+            self.distancetocarf(model)
         except:
             print("distance to car failure")
 
@@ -129,7 +129,7 @@ class PScene:
                      ## priority 6
             return 1
 
-    def distancetocar(self,model):
+    def distancetocarf(self,model):
         results = cardistance(model, self.SensingInput.colorframeraw)
         if(results is None):
             return 0
@@ -377,7 +377,7 @@ class PScene:
 def cardistance(model,current_frame):
     current_frame = np.asanyarray(current_frame.get_data())
 
-    cv2.imshow("camera",current_frame)
+    #cv2.imshow("camera",current_frame)
 
     results = model(current_frame)
     #print(results)
@@ -455,10 +455,10 @@ def cardistance(model,current_frame):
 
             })
 
-    cv2.imshow("camera", current_frame)
-    key = cv2.waitKey(1)
-    if key == 27:
-        return
+    #cv2.imshow("camera", current_frame)
+    #key = cv2.waitKey(1)
+    #if key == 27:
+     #   return
     #time.sleep(3)
     if(objects_list == []):
         return None
