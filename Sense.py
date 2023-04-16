@@ -159,6 +159,7 @@ class SensingInput:
 
     def gyro_data(gyro):
         return np.asarray([gyro.x, gyro.y, gyro.z])
+        
     def Nazrulsobjectdetection(self):
         colorframe = self.colorframe
         depthframe = self.depth_image

@@ -327,6 +327,7 @@ class PScene:
 
     def get_lane_detection(self):
         return self.lane_detection
+        
     def get_object_trigger(self):
         return self.objecttrigger
 
