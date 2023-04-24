@@ -97,7 +97,7 @@ try:
 
 
 
-            cv2.waitKey(5000)
+            cv2.waitKey(500)
 
         # time.sleep(2)
         if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):
