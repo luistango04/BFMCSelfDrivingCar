@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import Setup
+from Setup import pipeline
 import pyrealsense2 as rs
 # if Setup.JETSON_MODE:
 
@@ -16,10 +17,10 @@ import threading
 
 
 class SensingInput:
-    def __init__(self,ser,pipeline, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
+    def __init__(self,ser, GPS=0, IMU=0, INTELLISENSECAMERA=0, V2VLISTENER=0, BNOLISTENER=0):
         self.camera_resolutionx = Setup.camera_resolutionx
         self.camera_resolutiony = Setup.camera_resolutiony
-        self.pipeline = pipeline ##
+
         self.colorframe = 0
         self.ser = ser
         self.accel = 0
@@ -35,11 +36,13 @@ class SensingInput:
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
         #try:
-            print("Intellisense"+str(self.pipeline))
-            frames = self.pipeline.wait_for_frames()
+            print("Intellisense"+str(pipeline))
+            frames = pipeline.wait_for_frames()
             self.depth_image = frames.get_depth_frame()
             self.colorframeraw = frames.get_color_frame()
-            #print(self.colorframeraw)
+
+            self.timestamp = self.depth_image.get_timestamp()
+    #print(self.colorframeraw)
             self.colorframe = np.asanyarray(self.colorframeraw.get_data())
             # Reset the counter
 
@@ -52,7 +55,7 @@ class SensingInput:
 
             # Convert the color frame to a NumPy array
 
-            self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
+            self.accel = frames[2].as_motion_frame().get_motion_data()
 
             self.gyro = frames[3].as_motion_frame().get_motion_data()
             #print(self.gyro)

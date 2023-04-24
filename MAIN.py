@@ -1,5 +1,5 @@
 import Setup
-from Setup import DEBUG_MODE, JETSON_MODE,NAZRUL_MODE,SERIALDEBUG
+from Setup import DEBUG_MODE, JETSON_MODE,NAZRUL_MODE,SERIALDEBUG,pipeline
 from Sense import SensingInput
 from unittest.mock import Mock
 from SCENE import PScene
@@ -32,8 +32,8 @@ else:
     except:
         ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
 
-pipeline, model = Setup.init(ser)
-Sense = SensingInput(ser, pipeline)
+model = Setup.init(ser)
+Sense = SensingInput(ser)
 ser.flush()
 
 def test_fps(object_instance, num_frames=120):

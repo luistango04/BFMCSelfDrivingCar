@@ -1,26 +1,37 @@
 import time
-import numpy as np
-#from models.yolo import Model
 import torch
-import cv2
-
-#from models.yolo import DetectionModel
-import numpy as np
-
-import multiprocessing as mp
-import threading
 global DEBUG_MODE
 global JETSON_MODE
 global NAZRUL_MODE
 global SERIALDEBUG
-
-from yolov5 import *
-
+global pipeline
+import numpy as np
 DEBUG_MODE = True
 JETSON_MODE = True
 NAZRUL_MODE = False
 SERIALDEBUG = True
 BFMC_MQTT_CONTROL_TOPIC = "bfmc/control"
+
+
+
+if JETSON_MODE:
+    import pyrealsense2 as rs
+
+    camera_resolutionx = 424
+    camera_resolutiony = 240
+    pipeline = rs.pipeline()
+    config = rs.config()
+    config.enable_stream(rs.stream.depth, camera_resolutionx, camera_resolutiony, rs.format.z16, 30)
+    config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
+
+    config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 200)
+    config.enable_stream(rs.stream.gyro, rs.format.motion_xyz32f, 200)
+
+    profile = pipeline.start(config)
+    # get the start time metadata from the camera
+    start_time = profile.get_device().get_info(rs.camera_info.recommended_firmware_version)
+
+    time.sleep(2)
 
 if NAZRUL_MODE:
     from yolov3.configs import *
@@ -29,21 +40,15 @@ if NAZRUL_MODE:
     import tensorflow as tf
     global YOLO #YOLOv3
 
-if JETSON_MODE:
-    import pyrealsense2 as rs
-    import usb.core  # Import for the USB library
-    import usb.core  # Import for the USB library
-    import usb.util  # Import for the USB library
 
 def init(ser,DEBUG_MODE = False):
-    pipeline = []
+
     global camera_resolutionx
     global camera_resolutiony
     global starttime
     global yolo
     starttime = time.time()
-    camera_resolutionx = 424
-    camera_resolutiony = 240
+
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
     model = []
@@ -68,43 +73,19 @@ def init(ser,DEBUG_MODE = False):
     starttime = time.time()  ## PROGRAM START
     ## RUN THIS TO DO SET SENSOR
 
-    if JETSON_MODE:
-        pipeline = camerainit(camera_resolutionx, camera_resolutiony)
+
     if NAZRUL_MODE:
         yolo = Load_Yolo_model()
     pidcarsetting(kp,ki,kd,k_t,ser)
     time.sleep(1)
     print("Setup Done", pipeline)
-    return pipeline, model
+    return  model,start_time
 
 
 ## put planned activities connection protocol here : to set up and establish connection
 # def setupmqtt():
 
 
-def camerainit(camera_resolutionx, camera_resolutiony):
-
-
-
-
-    # Configure depth and color streams
-    pipeline = rs.pipeline()
-
-    # Configure the pipeline to stream both color, depth and motion
-    config = rs.config()
-    config.enable_stream(rs.stream.depth, camera_resolutionx, camera_resolutiony, rs.format.z16, 30)
-    config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
-
-
-    config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 100)
-    config.enable_stream(rs.stream.gyro)
-
-    # Start streaming
-    pipeline.start(config)
-
-
-    time.sleep(2)
-    return pipeline
 
 def pidcarsetting(kp,ki,kd,k_t,ser):
     # kp proportional time
@@ -206,3 +187,33 @@ def _generate_dummy_pipeline():
 # while True:
 #     cv2.imshow('color', colorframe)
 #     cv2.waitKey(1)
+def Intellsensor():  ## captures frame stores in class  # returns 1 if success 0 if fail
+    try:
+        print("Intellisense"+str(pipeline))
+        frames = pipeline.wait_for_frames()
+
+        # get the accelerometer frame
+        accel_frame = frames.first_or_default(rs.stream.accel)
+        gyro_frame = frames.first_or_default(rs.stream.gyro)
+
+        # Convert the depth frame to a NumPy array
+
+
+
+        # Convert the color frame to a NumPy array
+
+        #accel = frames[2].as_motion_frame().get_motion_data()
+
+        #gyro = frames[3].as_motion_frame().get_motion_data()
+        #print(self.gyro)
+        #print(self.accel)
+        # Display the depth image
+
+
+    except:
+        errorhandle.append(1) ## Returns 1 if intellisense fails to capture frame
+        return 0
+    #finally:
+        return 1
+        # Wait for a key press
+

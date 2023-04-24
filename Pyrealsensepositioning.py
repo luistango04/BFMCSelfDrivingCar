@@ -1,3 +1,58 @@
+#import torch
+import Setup
+from Setup import DEBUG_MODE, JETSON_MODE, NAZRUL_MODE, SERIALDEBUG,pipeline
+from Sense import SensingInput
+from unittest.mock import Mock
+from SCENE import PScene
+import time
+from Brain import Brain
+from MQTTGenericClient import MQTTGenericClient
+from GenericJsonReader import GenericJsonReader
+from VehicleControl import vehiclecontrol
+from Actuation import bothfree, velofree, steeringfree
+import Actuation
+import cv2
+import serial
+
+##########
+if NAZRUL_MODE:
+	from yolov3.helper_functions import det_obj_est_dis
+	from yolov3.configs import *
+##########
+
+
+
+# Dont forget to turn on the fan sudo sh -c "echo 255 > /sys/devices/pwm-fan/target_pwm"
+
+#jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
+#mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
+#mqttControlMessage.start_client()F
+#mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
+
+if (SERIALDEBUG):
+    ser = Mock()
+else:
+    try:
+        ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
+    except:
+        ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
+
+model,start_time = Setup.init(ser)
+Sense = SensingInput(ser)
+ser.flush()
+
+
+#
+time.sleep(1)  # Give time to fire up camera birghtness
+Scene = PScene(Sense)
+
+Brain = Brain(Scene)
+vehiclecontrol = vehiclecontrol(Brain, ser, Sense)
+Act = Actuation.Act(vehiclecontrol, ser)
+
+start_time = time.time()
+
+
 import pyrealsense2 as rs
 import numpy as np
 import time
@@ -47,6 +102,8 @@ Q = np.diag([0.1, 0.1, 0.1])  # Process noise covariance matrix
 R = np.diag([0.1, 0.1, 0.1])  # Measurement noise covariance matrix
 
 kf = KalmanFilter(A=A, B=B, H=H, Q=Q, R=R, P=P, x=x)
+kv = KalmanFilter(A=A, B=B, H=H, Q=Q, R=R, P=P, x=x)
+kp = KalmanFilter(A=A, B=B, H=H, Q=Q, R=R, P=P, x=x)
 
 
 
@@ -101,7 +158,7 @@ def init_plot():
     return(fig,axs)
 
 
-def update_plot(accel,vel, pos,fig,axs):
+def update_plot(accel,vel, pos,fig,axs,velo):
 
     # Clear previous points from both axes
     axs[0].cla()
@@ -120,6 +177,7 @@ def update_plot(accel,vel, pos,fig,axs):
     # # Plot velocity and position
     axs[0].plot(accel[1], accel[3], marker='x', markersize=5)
     axs[1].plot(vel[1], vel[3], marker='x', markersize=5)
+    axs[1].plot(velo, 0, marker='x', markersize=8)
     axs[2].plot( pos[1], pos[3], marker='o', markersize=5)
 
     # Set limits and labels for both axes
@@ -141,7 +199,7 @@ def update_plot(accel,vel, pos,fig,axs):
     plt.draw()
     plt.pause(0.001)
 
-def integrate_accel(acceleration,lastacceldata, vel, pos):
+def integrate_accel(acceleration,lastacceldata, vel, pos, kv = None, kp = None):
     # Extract accelerometer data and time stamps
 
     oldvel = vel
@@ -149,17 +207,26 @@ def integrate_accel(acceleration,lastacceldata, vel, pos):
     dt = acceleration[0]-lastacceldata[0]
     print("times: ", acceleration[0],lastacceldata[0])
     print("Elapsed time: ", dt)
-    print("Velocity values (m/s): ({:.5f}, {:.5f}, {:.5f})".format(vel[1], vel[2], vel[3]))
-    print("acceleration values (m/s): ({:.5f}, {:.5f}, {:.5f})".format(acceleration[1], acceleration[2], acceleration[3]))
-    print("lastacceldata values (m/s): ({:.5f}, {:.5f}, {:.5f})".format(lastacceldata[1], lastacceldata[2], lastacceldata[3]))
+
     # Calculate velocity using trapezoidal rule
     vel = vel + 0.5 * (acceleration  + lastacceldata) * dt
+    u = np.array([[dt]])  # Control input vector
+    z = np.array([[vel[1], vel[2], vel[3]]])  # Measurement vector
+    if(kv is not None):
+        kv.predict(dt=dt, u=u)
+        kv.update(z=z)
+        vel[1:3], vel[2], vel[3] = kv.x[0], kv.x[1], kv.x[2]
+
     print("Final Velocity values (m/s): ({:.3f}, {:.3f}, {:.3f})".format(vel[1], vel[2], vel[3]))
 
 
     print("Final velocity: ", vel)
     # Calculate position using trapezoidal rule
     pos = pos + 0.5 * (vel + oldvel) * dt
+    if(kp is not None):
+        kp.predict(dt=dt, u=u)
+        kp.update(z=z)
+        pos[1], pos[2], pos[3] = kp.x[0], kp.x[1], kp.x[2]
 
     return vel, pos
 
@@ -207,25 +274,25 @@ def calc_initial_orientation(data):
     print("Yaw: ", yaw)
     return roll, pitch, yaw
 
-def calibratefactors():
+def calibratefactors(Sense):
     data = np.zeros((100,6), dtype=np.float32)
 
 
     for i in range(100):
         print(i)
-        frames = pipeline.wait_for_frames()
+
+        Sense.senseall()
 
         # get the accelerometer frame
-        accel_frame = frames.first_or_default(rs.stream.accel)
-        gyro_frame = frames.first_or_default(rs.stream.gyro)
+
         # get the accelerometer data as a numpy array
         # gettretrival timestamp
-        timestamp = accel_frame.get_timestamp()
+        timestamp = Sense.timestamp/1000
 
-        accel_data = accel_frame.as_motion_frame().get_motion_data()
         # get the gyro data as a numpy array
-        gyro_data = gyro_frame.as_motion_frame().get_motion_data()
 
+        accel_data = Sense.accel
+        gyro_data = Sense.gyro
         # combine two arrays
         data[i] = np.array([ accel_data.x, accel_data.y, accel_data.z, gyro_data.x, gyro_data.y, gyro_data.z])
 
@@ -235,20 +302,13 @@ def calibratefactors():
 
     return data,timestamp
 # create a pipeline and start streaming
-pipeline = rs.pipeline()
-config = rs.config()
-config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 200)
-config.enable_stream(rs.stream.gyro, rs.format.motion_xyz32f, 200)
 
-profile = pipeline.start(config)
-# get the start time metadata from the camera
-start_time = profile.get_device().get_info(rs.camera_info.recommended_firmware_version)
 
 # print the start time
 fig,axes = init_plot()
 print("Camera start time: {}".format(start_time))
 
-adjustmentfactor,timestamp = calibratefactors()
+adjustmentfactor,timestamp = calibratefactors(Sense)
 
 roll,pitch,yaw = calc_initial_orientation(adjustmentfactor)
 
@@ -268,19 +328,21 @@ time.sleep(1)
 # loop to retrieve accelerometer data
 while True:
     # wait for a new frame
-    frames = pipeline.wait_for_frames()
+
+    Sense.senseall()
 
 
-    # get the accelerometer frame
-    accel_frame = frames.first_or_default(rs.stream.accel)
-    gyro_frame = frames.first_or_default(rs.stream.gyro)
+
     # get the accelerometer data as a numpy array
     #gettretrival timestamp
-    timestamp = accel_frame.get_timestamp()/1000
 
-    accel_data = accel_frame.as_motion_frame().get_motion_data()
+    timestamp = Sense.timestamp/1000
+
     # get the gyro data as a numpy array
-    gyro_data = gyro_frame.as_motion_frame().get_motion_data()
+
+    accel_data = Sense.accel
+    gyro_data = Sense.gyro
+    # combine two arrays
 
     #combine two arrays
     acceleration = np.array([timestamp,accel_data.x, accel_data.y, accel_data.z])- [0,adjustmentfactor[0],adjustmentfactor[1],adjustmentfactor[2]]
@@ -292,11 +354,12 @@ while True:
 
     dt = timestamp - lastacceldata[0]
     u = np.array([[dt]])  # Control input vector
-    z = np.random.randn(3, 1)  # Observation vector
+    z = np.array([[acceleration[1], acceleration[2], acceleration[3]]])  # Measurement vector
 
     kf.predict(dt=dt, u=u)
     kf.update(z=z)
-
+    #print(kf.x)
+    #combinedacceleration[1:7] = kf.x.flatten()
     print(f"Prediction: {kf.x.flatten()}, dt={dt}")
 
 
@@ -313,7 +376,7 @@ while True:
     accelerationinworldplane[0] = timestamp
 
 
-    velocity, position = integrate_accel(accelerationinworldplane, lastacceldata, velocity, position)
+    #velocity, position = integrate_accel(accelerationinworldplane, lastacceldata, velocity, position,kv,kp)
 
 
 
@@ -322,7 +385,7 @@ while True:
     # velocity,position = integrate_accel(acceleration, lastacceldata,velocity,position)
     #print("Velocity values (m/s): ({:.3f}, {:.3f}, {:.3f})".format(velocity[1], velocity[2], velocity[3]))
     # print("Position values (m): ({:.3f}, {:.3f}, {:.3f})".format(position[1], position[2], position[3]))
-    update_plot(np.array([timestamp,accel_data.x, accel_data.y, accel_data.z]),velocity, position,fig,axes)
+    update_plot(np.array([timestamp,accel_data.x, accel_data.y, accel_data.z]),velocity, position,fig,axes,Sense.velo)
     #
     lastgyrodata = gyroacceleration
     lastacceldata = accelerationinworldplane
