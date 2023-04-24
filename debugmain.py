@@ -26,7 +26,7 @@ if NAZRUL_MODE:
 
 #jsonReader = GenericJsonReader("MQTTVehicleControlMessages.json")
 #mqttControlMessage = MQTTGenericClient("jetsonCar", 1, jsonReader)
-#mqttControlMessage.start_client()
+#mqttControlMessage.start_client()F
 #mqttControlMessage.subscribe(Setup.BFMC_MQTT_CONTROL_TOPIC)
 
 if (SERIALDEBUG):
@@ -115,11 +115,12 @@ try:
         Sense.senseall()
         # cv2.imshow("TEST",Sense.colorframe)\
         Scene = PScene(Sense)
-        print(cardistance(model=model))
+        #print(cardistance(model=model))
         print("HHELLO WORLD")
 
         if (JETSON_MODE):
-            Scene.makeascene()
+
+            Scene.makeascene(Setup.YOLO)
 
         #print(depthtocar(model,Sense.colorframeraw))
 

@@ -378,8 +378,16 @@ def cardistance(model,current_frame):
     current_frame = np.asanyarray(current_frame.get_data())
 
     #cv2.imshow("camera",current_frame)
+    if(NAZRUL_MODE):
+        results = model(current_frame)
+        colorframe = current_frame
 
-    results = model(current_frame)
+        image_data = image_preprocess(np.copy(colorframe), [input_size, input_size])
+        image_data = image_data[np.newaxis, ...].astype(np.float32)
+        pred_bbox = Yolo.predict(image_data)
+
+    else:
+        results = model(current_frame)
     #print(results)
     # Extract the bounding box coordinates, class indices, and scores for each detected object
 
@@ -469,5 +477,17 @@ def cardistance(model,current_frame):
 
         return results
 
+    def Nazrulsobjectdetection(self):
+        colorframe = self.colorframe
+
+        image_data = image_preprocess(np.copy(colorframe), [input_size, input_size])
+        image_data = image_data[np.newaxis, ...].astype(np.float32)
+        pred_bbox = Yolo.predict(image_data)
+        pred_bbox = [tf.reshape(x, (-1, tf.shape(x)[-1])) for x in pred_bbox]
+        pred_bbox = tf.concat(pred_bbox, axis=0)
+        bboxes = postprocess_boxes(pred_bbox, original_image, input_size, score_threshold)
+        bboxes = nms(bboxes, iou_threshold, method='nms')
+
+        return bboxes, image_data
 
 
