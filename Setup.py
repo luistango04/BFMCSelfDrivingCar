@@ -16,10 +16,10 @@ global SERIALDEBUG
 
 from yolov5 import *
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 JETSON_MODE = True
 NAZRUL_MODE = False
-SERIALDEBUG = False
+SERIALDEBUG = True
 BFMC_MQTT_CONTROL_TOPIC = "bfmc/control"
 
 if NAZRUL_MODE:
@@ -27,6 +27,8 @@ if NAZRUL_MODE:
     from yolov3.yolov4 import *
     from yolov3.helper_functions import load_yolo_weights
     import tensorflow as tf
+    global YOLO #YOLOv3
+
 if JETSON_MODE:
     import pyrealsense2 as rs
     import usb.core  # Import for the USB library
@@ -44,9 +46,9 @@ def init(ser,DEBUG_MODE = False):
     camera_resolutiony = 240
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(device)
-
+    model = []
     # Load the model from a .pt file
-    model = torch.hub.load("ultralytics/yolov5", "yolov5s")  # or yolov5n - yolov5x6, custom
+    #model = torch.hub.load("ultralytics/yolov5", "yolov5s")  # or yolov5n - yolov5x6, custom
 
 
     # Results
@@ -82,36 +84,6 @@ def init(ser,DEBUG_MODE = False):
 
 def camerainit(camera_resolutionx, camera_resolutiony):
 
-#    Part to reset/reattach camera connection through software
-  #  Find the device
-  #   try:
-  #       dev = usb.core.find(idVendor=0x8086, idProduct=0x0b3a) #Intel D435i
-  #
-  #       #If the device is found, reset its USB connection
-  #       if dev is not None:
-  #           try:
-  #               #Detach the device from the kernel driver
-  #               if dev.is_kernel_driver_active(0):
-  #                   dev.detach_kernel_driver(0)
-  #
-  #               #Reset the device
-  #               dev.reset()
-  #
-  #               #Reattach the device to the kernel driver
-  #               usb.util.dispose_resources(dev)
-  #               dev.attach_kernel_driver(0)
-  #
-  #           #If there is an error, print it
-  #           except usb.core.USBError as e:
-  #               print("USBError: {}".format(str(e)))
-  #
-  #       #If the device is not found, print an error message
-  #       else:
-  #           print("USB device not found")
-  #   except:
-  #       if DEBUG_MODE:
-  #           return _generate_dummy_pipeline()
-
 
 
 
@@ -124,8 +96,8 @@ def camerainit(camera_resolutionx, camera_resolutiony):
     config.enable_stream(rs.stream.color, camera_resolutionx, camera_resolutiony, rs.format.bgr8, 30)
 
 
-    #config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
-#onfig.enable_stream(rs.stream.gyro)
+    config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 100)
+    config.enable_stream(rs.stream.gyro)
 
     # Start streaming
     pipeline.start(config)

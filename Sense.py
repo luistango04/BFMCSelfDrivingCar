@@ -35,14 +35,13 @@ class SensingInput:
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
         #try:
-            #print("Intellisense"+str(self.pipeline))
+            print("Intellisense"+str(self.pipeline))
             frames = self.pipeline.wait_for_frames()
             self.depth_image = frames.get_depth_frame()
             self.colorframeraw = frames.get_color_frame()
             #print(self.colorframeraw)
             self.colorframe = np.asanyarray(self.colorframeraw.get_data())
             # Reset the counter
-
 
             # Get the color frame
 
@@ -53,9 +52,9 @@ class SensingInput:
 
             # Convert the color frame to a NumPy array
 
-            #self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
+            self.accel = accel_data(frames[2].as_motion_frame().get_motion_data())
 
-            #self.gyro = gyro_data(frames[3].as_motion_frame().get_motion_data())
+            self.gyro = frames[3].as_motion_frame().get_motion_data()
             #print(self.gyro)
             #print(self.accel)
             # Display the depth image
@@ -159,7 +158,7 @@ class SensingInput:
 
     def gyro_data(gyro):
         return np.asarray([gyro.x, gyro.y, gyro.z])
-        
+
     def Nazrulsobjectdetection(self):
         colorframe = self.colorframe
         depthframe = self.depth_image
