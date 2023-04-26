@@ -31,48 +31,34 @@ else:
         ser = serial.Serial('/dev/ttyACM0', 19200, timeout=0.1)
     except:
         ser = serial.Serial('/dev/ttyACM1', 19200, timeout=0.1)
-
-model = Setup.init(ser)
-Sense = SensingInput(ser)
 ser.flush()
-
-def test_fps(object_instance, num_frames=120):
-    """
-    Test the FPS of an object instance by measuring the time it takes to process a certain number of frames.
-
-    Parameters:
-        object_instance (object): An instance of a class that has a "process_frame()" method that takes no arguments and returns None.
-        num_frames (int): The number of frames to process.
-
-    Returns:
-        float: The estimated FPS of the object instance.
-    """
-    start_time = time.time()
-    for i in range(num_frames):
-        object_instance.senseall()
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    fps = num_frames / elapsed_time
-    return fps
+time.sleep(5)
+model = Setup.init(ser)
+time.sleep(5)
+Sense = SensingInput(ser)
+time.sleep(5)
 
 
 #
 time.sleep(1)  # Give time to fire up camera birghtness
 Scene = PScene(Sense)
 
+time.sleep(5)
+print("MADE IT")
 Brain = Brain(Scene)
 vehiclecontrol = vehiclecontrol(Brain, ser, Sense)
 Act = Actuation.Act(vehiclecontrol, ser)
 
 start_time = time.time()
 iter = 1
-carspeed = .2
+carspeed = .3
 command = f"#1:{carspeed};;\r\n".encode()
 
 
-#ser.write(command)
+ser.write(command)
 try:
     while (iter < 100000):
+        Sense.ser.flush()
 
         iter = iter + 1
         #print("PRINTED: " + str(Act.steeringstatus) + " To console")
@@ -87,10 +73,10 @@ try:
         Brain.update(Scene)
         Brain.perform_action()  ## THINK
         if(DEBUG_MODE):
-            #print("DEBUG MODE")
-            print(Scene)
-            print("BRAIN GOT")
-            print(Brain)
+
+            #print(Scene)
+            print("Velo GOT")
+            print(Sense.velo)
 		
             print("Speed", vehiclecontrol.velocommands)
             time.sleep(.1)
@@ -100,13 +86,13 @@ try:
             cv2.waitKey(500)
 
         # time.sleep(2)
-        if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):
-            print("carnotready")
-            pass
-        else:
-            print("carready")
-            vehiclecontrol.updatefrombrainscene(Brain, Sense)
-            Act.update(vehiclecontrol)
+        #if (not (Act.steeringstatus) and not(Act.velocitystatus) and Brain.override == False):
+        #    print("carnotready")
+        #    pass
+        #else:
+        #    print("carready")
+        #    vehiclecontrol.updatefrombrainscene(Brain, Sense)
+        #    Act.update(vehiclecontrol)
 
         #
         #   cv2.waitKey(10000)

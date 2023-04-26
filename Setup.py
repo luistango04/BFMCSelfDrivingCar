@@ -9,7 +9,7 @@ import numpy as np
 DEBUG_MODE = True
 JETSON_MODE = True
 NAZRUL_MODE = False
-SERIALDEBUG = True
+SERIALDEBUG = False
 BFMC_MQTT_CONTROL_TOPIC = "bfmc/control"
 
 

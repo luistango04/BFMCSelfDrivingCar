@@ -33,12 +33,12 @@ class SensingInput:
         self.lastacceldata = [timestamp, 0.0, 0, 0, 0, 0, 0]
         self.lastgyrodata = [timestamp, 0, 0, 0]
         self.fig, self.axes = init_plot()
-        self.calibratefactors()
-        roll, pitch, yaw = calc_initial_orientation(self.adjustmentfactor)
-        self.gyrovelocity = [timestamp, 0, 0, 0]
+        #self.calibratefactors()
+        #roll, pitch, yaw = calc_initial_orientation(self.adjustmentfactor)
+        #self.gyrovelocity = [timestamp, 0, 0, 0]
 
-        self.gyroposition = [timestamp, roll, pitch, yaw]
-        self.position = [timestamp, 0, 0, 0, roll, pitch, yaw]
+        #self.gyroposition = [timestamp, roll, pitch, yaw]
+        #self.position = [timestamp, 0, 0, 0, roll, pitch, yaw]
 
 
         # Example usage in a loop with changing dt value
@@ -65,7 +65,7 @@ class SensingInput:
 
     def Intellsensor(self):  ## captures frame stores in class  # returns 1 if success 0 if fail
         try:
-            print("Intellisense"+str(pipeline))
+            #print("Intellisense"+str(pipeline))
             frames = pipeline.wait_for_frames()
             self.depth_image = frames.get_depth_frame()
             self.colorframeraw = frames.get_color_frame()
@@ -107,12 +107,12 @@ class SensingInput:
         return
 
     def encodervelocity(self):
-           try:
+           #try:
             # Read a line of data from the serial port
             data = self.ser.readline().decode().strip()
-
-            #print(data)
-	
+            print("SHIT THIS SOTPPED WORKING SOMEHOW")
+            print(data)
+            print("OK IT STILL SUCKS")
             if data:
                 # Parse the data to extract the RPM value
                 if data.startswith("@5:"):
@@ -127,7 +127,7 @@ class SensingInput:
                self.velo = 0
                return self.velo 
 
-           except:
+           #except:
 		
  #           print("ERROR IN RPM")
             return "ERROR IN RPM"
@@ -144,10 +144,10 @@ class SensingInput:
     def senseall(self):  # runs through all methods to refresh the senses. ## returns bit to sendto debug layer
         #try:
             self.Intellsensor()
-
+            
             self.encodervelocity()
-            self.acceleration, self.gyroacceleration,  self.gyroposition,self.lastacceldata,self.lastgyrodata,self.velocity,self.position = self.integrations()
-            update_plot(self.acceleration, self.velocity, self.position, self.fig, self.axes, self.velo)
+            #self.acceleration, self.gyroacceleration,  self.gyroposition,self.lastacceldata,self.lastgyrodata,self.velocity,self.position = self.integrations()
+            #update_plot(self.acceleration, self.velocity, self.position, self.fig, self.axes, self.velo)
             return  1
         #except:
             return 0
@@ -207,9 +207,9 @@ class SensingInput:
         return bboxes, image_data
 
     def calibratefactors(self):
-        data = np.zeros((100, 6), dtype=np.float32)
+        datac = np.zeros((100, 6), dtype=np.float32)
 
-        for i in range(100):
+        for i in range(30):
             print(i)
 
             self.Intellsensor()
@@ -225,11 +225,11 @@ class SensingInput:
             accel_data = self.accel
             gyro_data = self.gyro
             # combine two arrays
-            data[i] = np.array([accel_data.x, accel_data.y, accel_data.z, gyro_data.x, gyro_data.y, gyro_data.z])
+            datac[i] = np.array([accel_data.x, accel_data.y, accel_data.z, gyro_data.x, gyro_data.y, gyro_data.z])
 
         # calculate the average values of the accelerometer and gyroscope data
-        data = np.mean(data, axis=0)
-        self.adjustmentfactor = data
+        datac = np.mean(datac, axis=0)
+        self.adjustmentfactor = datac
         self.timestamp = timestamp
         return
 
@@ -289,98 +289,4 @@ class SensingInput:
 
 
 
-def kalmanfilters():
-    fig, axes = init_plot()
-    print("Camera start time: {}".format(start_time))
-
-    adjustmentfactor, timestamp = calibratefactors(Sense)
-
-    roll, pitch, yaw = calc_initial_orientation(adjustmentfactor)
-
-    print(adjustmentfactor)
-    # adjustmentfactor = [0,0,0,0,0,0,0]
-
-    # drawrollpitchyaw(scene,roll,pitch,yaw)
-    gyrovelocity = [timestamp, 0, 0, 0]
-    gyroposition = [timestamp, roll, pitch, yaw]
-    position = [timestamp, 0, 0, 0, roll, pitch, yaw]
-    velocity = [timestamp, 0, 0, 0, 0, 0, 0]
-    lastacceldata = [timestamp, 0.0, 0, 0, 0, 0, 0]
-    lastgyrodata = [timestamp, 0, 0, 0]
-    time.sleep(1)
-
-    # loop to retrieve accelerometer data
-    while True:
-        # wait for a new frame
-
-        Sense.senseall()
-
-        # get the accelerometer data as a numpy array
-        # gettretrival timestamp
-
-        timestamp = Sense.timestamp
-
-        # get the gyro data as a numpy array
-
-        # accel_data = Sense.accel
-        # gyro_data = Sense.gyro
-        # # combine two arrays
-        #
-        # # combine two arrays
-        # acceleration = np.array([timestamp, accel_data.x, accel_data.y, accel_data.z]) - [0, adjustmentfactor[0],
-        #                                                                                   adjustmentfactor[1],
-        #                                                                                   adjustmentfactor[2]]
-        #
-        # gyroacceleration = np.array([timestamp, gyro_data.x, gyro_data.y, gyro_data.z]) - [0, adjustmentfactor[3],
-        #                                                                                    adjustmentfactor[4],
-        #                                                                                    adjustmentfactor[5]]
-        # combinedacceleration = np.array(
-        #     [timestamp, accel_data.x, accel_data.y, accel_data.z, gyro_data.x, gyro_data.y, gyro_data.z]) - [0,
-        #                                                                                                      adjustmentfactor[
-        #                                                                                                          0],
-        #                                                                                                      adjustmentfactor[
-        #                                                                                                          1],
-        #                                                                                                      adjustmentfactor[
-        #                                                                                                          2],
-        #                                                                                                      adjustmentfactor[
-        #                                                                                                          3],
-        #                                                                                                      adjustmentfactor[
-        #                                                                                                          4],
-        #                                                                                                      adjustmentfactor[
-        #                                                                                                          5]]
-        #
-        # dt = timestamp - lastacceldata[0]
-        u = np.array([[dt]])  # Control input vector
-        z = np.array([[acceleration[1], acceleration[2], acceleration[3]]])  # Measurement vector
-
-        kf.predict(dt=dt, u=u)
-        kf.update(z=z)
-        # print(kf.x)
-        # combinedacceleration[1:7] = kf.x.flatten()
-        print(f"Prediction: {kf.x.flatten()}, dt={dt}")
-
-        print(x)
-        # print the data
-        # print(data)
-        # Print time stamp
-        print("Timestamp: {}".format(timestamp))
-        ## integrate pitch roll yaw
-        gyrovelocity, gyroposition = integrate_accel(gyroacceleration, lastgyrodata, gyrovelocity, gyroposition)
-
-        accelerationinworldplane = transform_acceleration(combinedacceleration, gyroposition)
-
-        accelerationinworldplane[0] = timestamp
-
-        # velocity, position = integrate_accel(accelerationinworldplane, lastacceldata, velocity, position,kv,kp)
-
-        #
-
-        # velocity,position = integrate_accel(acceleration, lastacceldata,velocity,position)
-        # print("Velocity values (m/s): ({:.3f}, {:.3f}, {:.3f})".format(velocity[1], velocity[2], velocity[3]))
-        # print("Position values (m): ({:.3f}, {:.3f}, {:.3f})".format(position[1], position[2], position[3]))
-        update_plot(np.array([timestamp, accel_data.x, accel_data.y, accel_data.z]), velocity, position, fig, axes,
-                    Sense.velo)
-        #
-        lastgyrodata = gyroacceleration
-        lastacceldata = accelerationinworldplane
 
